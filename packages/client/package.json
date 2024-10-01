@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@trpc/client": "^11.0.0-rc.553",
     "pinia": "^2.2.3",
     "vue": "^3.4.37",
     "vue-router": "^4.4.5"

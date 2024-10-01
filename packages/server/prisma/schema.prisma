@@ -65,8 +65,8 @@ model Uncertainty {
   title       String    @db.VarChar(255)
   description String    @db.Text
   type        String    @db.VarChar(255) // "risk" | "opportunity"
-  impact      Float
-  frequency   Float
+  impact      Float     @default(0)
+  frequency   Float     @default(0)
   process     Process   @relation(fields: [processId], references: [id])
   processId   Int
   controls    Control[]
@@ -79,7 +79,7 @@ model Control {
   title         String      @db.VarChar(255)
   description   String      @db.Text
   type          String      @db.VarChar(255) // "preventive" | "detective"
-  effectiveness Float
+  effectiveness Float       @default(0)
   uncertainty   Uncertainty @relation(fields: [uncertaintyId], references: [id])
   uncertaintyId Int
 }

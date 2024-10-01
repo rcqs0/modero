@@ -1,13 +1,27 @@
-import express from 'express'
+import { publicProcedure, router } from './trpc'
+import { createHTTPServer } from '@trpc/server/adapters/standalone'
+import { PrismaClient } from '@prisma/client'
 
-const app = express()
+const prisma = new PrismaClient()
 
-app.use(express.json())
+const appRouter = router({
+  controls: publicProcedure.query(async () => {
+    const controls = await prisma.control.findMany({
+      include: {
+        uncertainty: true,
+      },
+    })
 
-app.get('/', (req, res) => {
-  res.send('hello world!')
+    return controls
+  }),
 })
 
-app.listen(1337, () => {
+const server = createHTTPServer({
+  router: appRouter,
+})
+
+server.listen(1337, () => {
   console.log(`App listening at http://localhost:${1337}`)
 })
+
+export type AppRouter = typeof appRouter
