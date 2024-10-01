@@ -3,7 +3,10 @@ cubes:
     sql_table: 'public."Group"'
     data_source: default
 
-    joins: []
+    joins:
+      - name: membership
+        sql: '{CUBE}."id" = {membership}."groupId"'
+        relationship: one_to_many
 
     dimensions:
       - name: id

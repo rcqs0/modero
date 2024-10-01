@@ -4,17 +4,13 @@ cubes:
     data_source: default
 
     joins:
-      - name: group
-        sql: '{CUBE}."groupId" = {group}.id'
-        relationship: many_to_one
-
       - name: person
         sql: '{CUBE}."personId" = {person}.id'
         relationship: many_to_one
 
     dimensions:
       - name: id
-        sql: "{CUBE}.personId || ';' || {CUBE}.groupId"
+        sql: '{CUBE}."personId" || '';'' || {CUBE}."groupId"'
         type: string
         primary_key: true
 
