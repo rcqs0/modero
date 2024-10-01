@@ -6,7 +6,7 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from 'vue'
-import client from '../client'
+import client from '@/client'
 
 export default defineComponent({
   setup() {

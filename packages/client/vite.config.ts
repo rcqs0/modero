@@ -7,6 +7,10 @@ import components from 'unplugin-vue-components/vite'
 export default defineConfig({
   plugins: [vue(), jsx(), components({ dts: 'src/components.d.ts' })],
 
+  resolve: {
+    alias: [{ find: '@', replacement: '/src' }],
+  },
+
   server: {
     proxy: {
       '/api': {
