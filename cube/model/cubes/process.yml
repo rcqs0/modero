@@ -1,11 +1,11 @@
 cubes:
   - name: process
-    sql_table: "public.\"Process\""
+    sql_table: 'public."Process"'
     data_source: default
 
     joins:
       - name: group
-        sql: "{CUBE}.\"groupId\" = {group}.id"
+        sql: '{CUBE}."groupId" = {group}.id'
         relationship: many_to_one
 
     dimensions:
@@ -22,12 +22,12 @@ cubes:
         sql: description
         type: string
 
-      - name: createdat
-        sql: "{CUBE}.\"createdAt\""
+      - name: createdAt
+        sql: '{CUBE}."createdAt"'
         type: time
 
-      - name: updatedat
-        sql: "{CUBE}.\"updatedAt\""
+      - name: updatedAt
+        sql: '{CUBE}."updatedAt"'
         type: time
 
     measures:
@@ -37,4 +37,3 @@ cubes:
     pre_aggregations:
       # Pre-aggregation definitions go here.
       # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-

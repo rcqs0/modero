@@ -22,11 +22,11 @@ cubes:
         sql: role
         type: string
 
-      - name: createdat
+      - name: createdAt
         sql: '{CUBE}."createdAt"'
         type: time
 
-      - name: updatedat
+      - name: updatedAt
         sql: '{CUBE}."updatedAt"'
         type: time
 
