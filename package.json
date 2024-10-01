@@ -1,0 +1,11 @@
+{
+  "name": "modero",
+  "version": "1.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
