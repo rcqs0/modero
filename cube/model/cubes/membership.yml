@@ -14,7 +14,7 @@ cubes:
 
     dimensions:
       - name: id
-        sql: "{CUBE}.personId || ';' || {CUBE}.group_id"
+        sql: "{CUBE}.personId || ';' || {CUBE}.groupId"
         type: string
         primary_key: true
 
