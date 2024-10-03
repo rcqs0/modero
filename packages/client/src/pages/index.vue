@@ -1,5 +1,5 @@
 <template>
-  <div class="text-xs">
+  <div class="p-4">
     <pre>{{ result }}</pre>
   </div>
 </template>
@@ -16,7 +16,10 @@ export default defineComponent({
       result.value = await client.controls.query()
     })
 
-    return { result }
+    const date = ref()
+    const rating = ref()
+
+    return { result, date, rating }
   },
 })
 </script>

@@ -25,7 +25,10 @@
     "paths": {
       "@/*": ["src/*"],
       "@prisma/client": ["../../node_modules/@prisma/client"]
-    }
+    },
+
+    /* Misc */
+    "allowJs": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
 }
