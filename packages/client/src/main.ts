@@ -1,7 +1,8 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
-import theme from './theme' //import preset
+// import theme from './theme'
+import Aura from '@primevue/themes/aura'
 import 'primeicons/primeicons.css'
 import './style.css'
 import main from './main.vue'
@@ -13,8 +14,15 @@ const pinia = createPinia()
 app.use(router)
 app.use(pinia)
 app.use(PrimeVue, {
-  unstyled: true,
-  pt: theme,
+  theme: {
+    preset: Aura,
+    options: {
+      cssLayer: {
+        name: 'primevue',
+        order: 'tailwind-base, primevue, tailwind-utilities',
+      },
+    },
+  },
 })
 
 app.mount('#app')

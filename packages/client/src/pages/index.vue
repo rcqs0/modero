@@ -1,6 +1,7 @@
 <template>
   <div class="p-4">
-    <pre>{{ result }}</pre>
+    <DatePicker v-model="date" />
+    <!-- <pre>{{ result }}</pre> -->
   </div>
 </template>
 
