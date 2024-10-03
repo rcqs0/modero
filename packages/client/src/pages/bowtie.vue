@@ -1,14 +1,6 @@
 <template>
   <Layout>
-    <BowtieDiagram
-      :data="{
-        uncertainties,
-        events,
-        controls,
-        causes,
-        effects,
-      }"
-    />
+    <BowtieDiagram v-if="initialized" :data="state" />
   </Layout>
 </template>
 
@@ -21,6 +13,7 @@ import {
   causeSchema,
   effectSchema,
 } from '@/schemas'
+import useDocument from '@/composables/document'
 
 const uncertainties = [
   uncertaintySchema.parse({
@@ -162,4 +155,15 @@ const effects = [
     controls: [controls[14], controls[15]],
   }),
 ]
+
+const { state, initialized } = useDocument(
+  {
+    uncertainties,
+    events,
+    controls,
+    causes,
+    effects,
+  },
+  { channel: 'main' },
+)
 </script>

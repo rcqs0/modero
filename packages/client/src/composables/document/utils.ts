@@ -124,7 +124,7 @@ export function transact<T>(
       : scope instanceof Y.AbstractType
       ? scope.doc
       : scope && typeof scope === 'object'
-      ? scope[YOBJECT_KEY]
+      ? scope[YOBJECT_KEY]?.doc
       : undefined
 
   if (doc) {

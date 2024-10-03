@@ -59,6 +59,7 @@ import {
   controlSchema,
 } from '@/schemas'
 import { useLayout } from './useLayout'
+import { transact } from '@/composables/document/utils'
 
 type Instance = Uncertainty | Control | Cause | Effect
 
@@ -97,6 +98,7 @@ function addEdge(source: Instance, target: Instance) {
 }
 
 function build() {
+  console.log('BUILD_DIAGRAM')
   nodes.value = []
   edges.value = []
 
@@ -151,7 +153,19 @@ function build() {
   })
 }
 
-watch(() => props.data, build, { immediate: true })
+watch(
+  [
+    () => props.data,
+    () => props.data.uncertainties.length,
+    () => props.data.causes.length,
+    () => props.data.effects.length,
+    () => props.data.controls.length,
+  ],
+  build,
+  {
+    immediate: true,
+  },
+)
 
 function layoutGraph() {
   nodes.value = layout(nodes.value, edges.value, 'LR')
@@ -182,8 +196,6 @@ function addEffect(uncertainty: Uncertainty) {
   })
   props.data.effects.push(effect)
   selected.value = effect.id
-
-  build()
 }
 
 function addCause(uncertainty: Uncertainty) {
@@ -193,18 +205,16 @@ function addCause(uncertainty: Uncertainty) {
   })
   props.data.causes.push(cause)
   selected.value = cause.id
-
-  build()
 }
 
 function addControl(source: Cause | Effect) {
   const control = controlSchema.parse({
     label: 'Control',
   })
-  props.data.controls.push(control)
-  source.controls.push(control)
+  transact(props.data.controls, () => {
+    props.data.controls.push(control)
+    source.controls.push(control)
+  })
   selected.value = control.id
-
-  build()
 }
 </script>
