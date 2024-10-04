@@ -19,6 +19,5 @@ export default {
       '9xl': ['8rem', 'normal'],
     },
   },
-  darkMode: 'class',
   plugins: [require('tailwindcss-primeui')],
 }
