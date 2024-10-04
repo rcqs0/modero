@@ -8,6 +8,6 @@ html {
     Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji,
     Segoe UI Symbol;
   font-size: 14px;
-  line-height: normal;
+  /* line-height: normal; */
 }
 </style>

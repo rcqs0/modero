@@ -9,6 +9,8 @@ declare module 'vue' {
   export interface GlobalComponents {
     BlockUI: typeof import('primevue/blockui')['default']
     Button: typeof import('primevue/button')['default']
+    Column: typeof import('primevue/column')['default']
+    DataTable: typeof import('primevue/datatable')['default']
     DatePicker: typeof import('primevue/datepicker')['default']
     IconField: typeof import('primevue/iconfield')['default']
     InputIcon: typeof import('primevue/inputicon')['default']
@@ -17,6 +19,7 @@ declare module 'vue' {
     Rating: typeof import('primevue/rating')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Slider: typeof import('primevue/slider')['default']
     Zwutton: typeof import('./components/Zwutton.vue')['default']
   }
 }
