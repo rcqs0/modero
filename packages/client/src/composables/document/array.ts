@@ -1,35 +1,33 @@
 import * as Y from 'yjs'
 import object from './object'
-import { YOBJECT_KEY, convert } from './utils'
+import { YOBJECT_KEY, convert, transact } from './utils'
 
+// proxy cache
 const arrays = new WeakMap<Y.Array<any>>()
 
+// convert proxy property to array key
 function toKey(prop: string | number | symbol) {
   if (typeof prop === 'string' && prop.trim().length) {
-    const num = Number(prop)
-    if (Number.isInteger(num)) {
-      return num
+    const number = Number(prop)
+
+    if (Number.isInteger(number)) {
+      return number
     }
   }
 
   return prop
 }
 
-export default function array<T>(
-  init: T[] = [],
-  arr = new Y.Array<T>(),
-): T[] & { [YOBJECT_KEY]: Y.Array<T> } {
+export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
   if (init.length && arr.length) {
     throw new Error("Can't provide initial values for a non-empty array.")
   }
 
+  // return cached proxy if available
   if (arrays.has(arr)) return arrays.get(arr)
 
-  function transact(fn: () => any) {
-    return arr.doc ? arr.doc.transact(fn) : fn()
-  }
-
-  const proxy = new Proxy([] as any as T[] & { [YOBJECT_KEY]: Y.Array<T> }, {
+  // create new proxy
+  const proxy = new Proxy([] as T[], {
     get(target, prop, receiver) {
       const key = toKey(prop)
 
@@ -108,7 +106,7 @@ export default function array<T>(
             deleted.push(receiver[i])
           }
 
-          transact(() => {
+          transact(arr, () => {
             arr.delete(start, deleteCount)
             arr.insert(start, items.map(convert))
           })
@@ -138,7 +136,7 @@ export default function array<T>(
         const method = Reflect.get(target, prop)
 
         return function () {
-          return transact(() => {
+          return transact(arr, () => {
             return method.apply(receiver, arguments)
           })
         }
@@ -165,7 +163,7 @@ export default function array<T>(
       }
 
       if (typeof key === 'number') {
-        transact(() => {
+        transact(arr, () => {
           arr.delete(key, 1)
           arr.insert(key, [convert(value)])
         })
@@ -223,8 +221,10 @@ export default function array<T>(
     },
   })
 
+  // initialize with provided values
   arr.insert(0, init.map(convert))
 
+  // cache proxy before returning
   arrays.set(arr, proxy)
   return proxy
 }

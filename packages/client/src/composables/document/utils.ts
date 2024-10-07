@@ -16,18 +16,32 @@ export function convert(value: any) {
   return value
 }
 
-export function transact<T>(obj: any, f: (tr?: Y.Transaction) => T): T {
-  if (typeof obj !== 'object') return f()
+export function transact<T>(
+  scope: any,
+  f: (transaction?: Y.Transaction) => T,
+): T {
+  if (typeof scope !== 'object') return f()
 
-  const internal = obj[YOBJECT_KEY]
-
-  if (internal instanceof Y.Doc) {
-    return internal.transact(f)
+  if (scope instanceof Y.Doc) {
+    return scope.transact(f)
   }
 
-  if (internal instanceof Y.AbstractType) {
-    if (internal.doc) {
-      return internal.doc.transact(f)
+  if (scope instanceof Y.AbstractType) {
+    if (scope.doc) {
+      return scope.doc.transact(f)
+    }
+    return f()
+  }
+
+  const yobject = scope[YOBJECT_KEY]
+
+  if (yobject instanceof Y.Doc) {
+    return yobject.transact(f)
+  }
+
+  if (yobject instanceof Y.AbstractType) {
+    if (yobject.doc) {
+      return yobject.doc.transact(f)
     }
   }
 

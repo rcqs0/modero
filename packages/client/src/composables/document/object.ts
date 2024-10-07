@@ -2,18 +2,20 @@ import * as Y from 'yjs'
 import { convert, YOBJECT_KEY } from './utils'
 import array from './array'
 
+// proxy cache
 const objects = new WeakMap<Y.Map<any>>()
 
 export default function object<
   T extends Record<string, any> = Record<string, any>,
->(init = {} as T, map = new Y.Map<any>()): T {
+>(init = {} as T, map = new Y.Map<any>()) {
   if (Object.keys(init).length && map.size) {
     throw new Error("Can't provide initial values for a non-empty map.")
   }
 
+  // return cached proxy if available
   if (objects.has(map)) return objects.get(map)
 
-  // proxy
+  // create new proxy
   const proxy = new Proxy({} as T, {
     get(target, prop) {
       if (prop === YOBJECT_KEY) {
@@ -65,10 +67,12 @@ export default function object<
     },
   })
 
+  // initialize with provided values
   for (let key in init) {
     proxy[key] = init[key]
   }
 
+  // cache proxy before returning
   objects.set(map, proxy)
   return proxy
 }
