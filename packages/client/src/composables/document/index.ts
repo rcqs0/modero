@@ -5,6 +5,8 @@ import { Awareness } from 'y-protocols/awareness'
 import object from './object'
 import { Entities } from './utils'
 
+export { YOBJECT_KEY, transact } from './utils'
+
 export default function useDocument<
   T extends Record<string, any[] | Record<any, any>>,
   C extends Record<string, any>,

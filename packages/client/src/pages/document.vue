@@ -18,13 +18,13 @@ export default defineComponent({
         __typename: 'Course',
         id: 'Course-1',
         title: 'Course 1',
-        tags: [] as string[],
+        tags: ['a', 'b', 'c'],
       },
     })
 
     function update() {
       doc.course.title = 'Woooooooooooot'
-      doc.course.tags.push('x')
+      doc.course.tags = ['x', 'y', 'z']
     }
 
     return { doc, update }
