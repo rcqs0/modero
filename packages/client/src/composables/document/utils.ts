@@ -4,6 +4,18 @@ import * as Y from 'yjs'
 
 export const YOBJECT_KEY = Symbol('yobject')
 
+export function proxify(value: any) {
+  if (value instanceof Y.Array) {
+    return array([], value)
+  }
+
+  if (value instanceof Y.Map) {
+    return object({}, value)
+  }
+
+  return value
+}
+
 export function convert(value: any) {
   if (Array.isArray(value)) {
     return array(value)[YOBJECT_KEY]
@@ -20,8 +32,6 @@ export function transact<T>(
   scope: any,
   f: (transaction?: Y.Transaction) => T,
 ): T {
-  if (typeof scope !== 'object') return f()
-
   if (scope instanceof Y.Doc) {
     return scope.transact(f)
   }
@@ -33,15 +43,17 @@ export function transact<T>(
     return f()
   }
 
-  const yobject = scope[YOBJECT_KEY]
+  if (typeof scope === 'object') {
+    const yobject = scope[YOBJECT_KEY]
 
-  if (yobject instanceof Y.Doc) {
-    return yobject.transact(f)
-  }
+    if (yobject instanceof Y.Doc) {
+      return yobject.transact(f)
+    }
 
-  if (yobject instanceof Y.AbstractType) {
-    if (yobject.doc) {
-      return yobject.doc.transact(f)
+    if (yobject instanceof Y.AbstractType) {
+      if (yobject.doc) {
+        return yobject.doc.transact(f)
+      }
     }
   }
 

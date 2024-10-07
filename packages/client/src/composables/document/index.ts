@@ -1,7 +1,7 @@
 import * as Y from 'yjs'
 import object from './object'
 import array from './array'
-import { YOBJECT_KEY } from './utils'
+import { YOBJECT_KEY, proxify } from './utils'
 import { reactive, Reactive } from 'vue'
 
 export { YOBJECT_KEY, transact } from './utils'
@@ -32,13 +32,7 @@ export default function useDocument<
       if (typeof prop !== 'string' || !doc.share.has(prop))
         return Reflect.get(target, prop)
 
-      const value = doc.get(prop)
-
-      if (value instanceof Y.Array) {
-        return array([], value)
-      }
-
-      return object({}, value as Y.Map<any>)
+      return proxify(doc.get(prop))
     },
     set(target, prop, value) {
       if (typeof prop === 'symbol') {

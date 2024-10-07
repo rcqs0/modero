@@ -1,6 +1,5 @@
 import * as Y from 'yjs'
-import { convert, YOBJECT_KEY } from './utils'
-import array from './array'
+import { YOBJECT_KEY, proxify, convert } from './utils'
 
 // proxy cache
 const objects = new WeakMap<Y.Map<any>>()
@@ -26,14 +25,7 @@ export default function object<
         return Reflect.get(target, prop)
       }
 
-      const value = map.get(prop)
-
-      if (value instanceof Y.Array) {
-        return array([], value)
-      } else if (value instanceof Y.Map) {
-        return object({}, value)
-      }
-      return value
+      return proxify(map.get(prop))
     },
     set(target, prop, value) {
       if (typeof prop === 'symbol') {

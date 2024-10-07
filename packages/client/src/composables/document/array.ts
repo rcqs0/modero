@@ -1,6 +1,5 @@
 import * as Y from 'yjs'
-import object from './object'
-import { YOBJECT_KEY, convert, transact } from './utils'
+import { YOBJECT_KEY, proxify, convert, transact } from './utils'
 
 // proxy cache
 const arrays = new WeakMap<Y.Array<any>>()
@@ -40,13 +39,7 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
       }
 
       if (typeof key === 'number') {
-        const value = arr.get(key)
-        if (value instanceof Y.Array) {
-          return array([], value)
-        } else if (value instanceof Y.Map) {
-          return object({}, value)
-        }
-        return value
+        return proxify(arr.get(key))
       }
 
       if (key === 'length') {
