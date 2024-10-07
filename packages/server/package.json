@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
+    "@sinclair/typebox": "^0.33.14",
     "@trpc/server": "^11.0.0-rc.553",
     "zod": "^3.23.8"
   }
