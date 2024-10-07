@@ -5,15 +5,15 @@ import * as Y from 'yjs'
 export const INTERNAL_OBJECT = Symbol('INTERNAL_OBJECT')
 
 export function resolve(value: any) {
-  let resolved = value
-
   if (Array.isArray(value)) {
-    resolved = array(value)[INTERNAL_OBJECT]
-  } else if (value && typeof value === 'object') {
-    resolved = object(value)[INTERNAL_OBJECT]
+    return array(value)[INTERNAL_OBJECT]
   }
 
-  return resolved
+  if (value && typeof value === 'object') {
+    return object(value)[INTERNAL_OBJECT]
+  }
+
+  return value
 }
 
 export function transact<T>(obj: any, f: (tr?: Y.Transaction) => T) {
