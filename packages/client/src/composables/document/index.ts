@@ -33,6 +33,7 @@ export default function useDocument<
       if (value instanceof Y.Array) {
         return array([], value)
       }
+
       return object({}, value as Y.Map<any>)
     },
     set(target, prop, value) {
