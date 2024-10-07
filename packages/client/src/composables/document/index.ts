@@ -1,8 +1,10 @@
 import * as Y from 'yjs'
 import object from './object'
 import array from './array'
-import { INTERNAL_OBJECT } from './utils'
+import { YOBJECT_KEY } from './utils'
 import { reactive, Reactive } from 'vue'
+
+export { YOBJECT_KEY, transact } from './utils'
 
 export default function useDocument<
   T extends Record<string, any[] | Record<any, any>>,
@@ -17,7 +19,7 @@ export default function useDocument<
 
   const proxy = new Proxy({} as T, {
     get(target, prop) {
-      if (prop === INTERNAL_OBJECT) {
+      if (prop === YOBJECT_KEY) {
         return doc
       }
 
@@ -41,10 +43,10 @@ export default function useDocument<
         return Reflect.set(target, prop, value)
       }
 
-      throw new Error()
+      throw new Error("Can't add new root level objects after initialization.")
     },
     deleteProperty(_target, _prop) {
-      throw new Error()
+      throw new Error("Can't delete root level objects after initialization.")
     },
     has(_target, prop) {
       if (typeof prop !== 'string') return false

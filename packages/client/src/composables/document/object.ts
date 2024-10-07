@@ -1,5 +1,5 @@
 import * as Y from 'yjs'
-import { resolve, INTERNAL_OBJECT } from './utils'
+import { convert, YOBJECT_KEY } from './utils'
 import array from './array'
 
 const objects = new WeakMap<Y.Map<any>>()
@@ -7,12 +7,16 @@ const objects = new WeakMap<Y.Map<any>>()
 export default function object<
   T extends Record<string, any> = Record<string, any>,
 >(init = {} as T, map = new Y.Map<any>()): T {
+  if (Object.keys(init).length && map.size) {
+    throw new Error("Can't provide initial values for a non-empty map.")
+  }
+
   if (objects.has(map)) return objects.get(map)
 
   // proxy
   const proxy = new Proxy({} as T, {
     get(target, prop) {
-      if (prop === INTERNAL_OBJECT) {
+      if (prop === YOBJECT_KEY) {
         return map
       }
 
@@ -34,7 +38,7 @@ export default function object<
         return Reflect.set(target, prop, value)
       }
 
-      map.set(prop, resolve(value))
+      map.set(prop, convert(value))
       return true
     },
     deleteProperty(_target, prop) {
