@@ -3,6 +3,7 @@
     <Button @click="update">Update</Button>
     <div class="flex">
       <pre>{{ doc.course }}</pre>
+      <pre>{{ doc.course.tags.length }}</pre>
     </div>
   </div>
 </template>
@@ -22,9 +23,13 @@ export default defineComponent({
       },
     })
 
+    let i = 0
+
     function update() {
       doc.course.title = 'Woooooooooooot'
-      doc.course.tags = ['x', 'y', 'z']
+      // doc.course.tags.push(`${i}`)
+      // i++
+      doc.course.tags.pop()
     }
 
     return { doc, update }
