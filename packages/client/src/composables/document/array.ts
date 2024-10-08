@@ -178,7 +178,7 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
     },
 
     deleteProperty(_target, _prop) {
-      throw new Error('delete operation not allowed')
+      throw new Error('Delete operation on arrays is not supported.')
     },
 
     getOwnPropertyDescriptor(_target, prop) {
