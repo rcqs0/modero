@@ -316,7 +316,7 @@ function layout(direction: string) {
   dagreGraph.setDefaultEdgeLabel(() => ({}))
 
   const isHorizontal = direction === 'LR'
-  dagreGraph.setGraph({ rankdir: direction, align: 'UL' })
+  dagreGraph.setGraph({ rankdir: direction, align: undefined /* 'UL' */ })
 
   for (const node of nodes.value) {
     // if you need width+height of nodes for your layout, you can use the dimensions property of the internal node (`GraphNode` type)
