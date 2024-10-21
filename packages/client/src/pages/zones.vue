@@ -54,12 +54,14 @@ const zones: Zone[] = [
       {
         id: 'A',
         text: 'Choice A',
-        zoneTriggers: 'Zone-2',
+        zoneTriggers: 'Zone-2,Zone-6',
       },
       {
         id: 'B',
         text: 'Choice B',
-        zoneTriggers: 'Zone-3,Zone-6',
+        // zoneTriggers: 'Zone-3,Zone-6',
+        zoneTriggers: 'Zone-6:Zone-3',
+        // zoneTriggers: 'Zone-3',
       },
     ],
   },
@@ -84,10 +86,6 @@ const zones: Zone[] = [
         id: 'B',
         text: 'Choice B',
         zoneTriggers: 'Zone-5',
-      },
-      {
-        id: 'B',
-        text: 'Choice B',
       },
     ],
   },
@@ -163,7 +161,7 @@ type Context = {
 
 function build(
   zones: Zone[],
-  branch: Zone[] = zones,
+  branch: (Zone | Zone[])[] = zones,
   claims: { zone: Zone; owner: Zone }[] = [],
   nodes: Node[] = [],
   edges: Edge[] = [],
@@ -199,18 +197,34 @@ function build(
 
   // main loop
   branch.forEach((zone) => {
-    if (!context && skip.includes(zone)) return
+    if (!context && _.intersection(skip, _.castArray(zone)).length) return
+
+    let node: Node
 
     // create the zone node and add it
-    const node = {
-      id: zone.id, // _.uniqueId()
-      label: zone.title,
-      position: { x: 0, y: 0 },
-      data: {
-        type: isBranch(zone) ? 'branching' : 'content',
-        fallback: false,
-        zone,
-      },
+    if (Array.isArray(zone)) {
+      // add group node
+      node = {
+        id: _.map(zone, 'id').join(','), // _.uniqueId()
+        label: _.map(zone, 'title').join(','),
+        position: { x: 0, y: 0 },
+        data: {
+          type: 'group',
+          fallback: false,
+          zone,
+        },
+      }
+    } else {
+      node = {
+        id: zone.id, // _.uniqueId()
+        label: zone.title,
+        position: { x: 0, y: 0 },
+        data: {
+          type: isBranch(zone) ? 'branching' : 'content',
+          fallback: false,
+          zone,
+        },
+      }
     }
 
     nodes.push(node)
@@ -255,26 +269,49 @@ function build(
       })
     }
 
+    const zone_ = _.last(_.castArray(zone))!
+
     // for branching zones, create branches from choices
-    if (isBranch(zone)) {
-      zone.choices?.forEach((choice) => {
-        const children: Zone[] = []
+    if (isBranch(zone_)) {
+      zone_.choices?.forEach((choice) => {
+        const children: (Zone | Zone[])[] = []
         const destinations = _.uniq(choice.zoneTriggers?.split(','))
 
         destinations.forEach((destination) => {
-          const child = zones.find((zone) => zone.id === destination)
+          const parts = destination.split(':')
 
-          if (child) {
-            const claim = claims.find((claim) => claim.zone === child)
+          if (parts.length === 1) {
+            const child = zones.find((zone) => zone.id === destination)
 
-            // ignore zones that are claimed in a previous branch
-            if (claim && claim.owner !== zone) return
+            if (child) {
+              const claim = claims.find((claim) => claim.zone === child)
 
-            children.push(child)
+              // ignore zones that are claimed in a previous branch
+              if (claim && claim.owner !== zone) return
 
-            if (!claim) {
-              claims.push({ zone: child, owner: zone })
+              children.push(child)
+
+              if (!claim) {
+                claims.push({ zone: child, owner: zone_ })
+              }
             }
+          } else {
+            const group = _.compact(
+              parts.map((id) => zones.find((zone) => zone.id === id)),
+            )
+
+            group.forEach((child) => {
+              const claim = claims.find((claim) => claim.zone === child)
+
+              // ignore zones that are claimed in a previous branch
+              if (claim && claim.owner !== zone) return
+
+              if (!claim) {
+                claims.push({ zone: child, owner: zone_ })
+              }
+            })
+
+            children.push(group)
           }
         })
 
@@ -305,7 +342,7 @@ const init = build(zones)
 const nodes = ref(init.nodes)
 const edges = ref(init.edges)
 
-console.log(init)
+// console.log(init)
 
 const { findNode } = useVueFlow()
 
@@ -316,7 +353,7 @@ function layout(direction: string) {
   dagreGraph.setDefaultEdgeLabel(() => ({}))
 
   const isHorizontal = direction === 'LR'
-  dagreGraph.setGraph({ rankdir: direction, align: undefined /* 'UL' */ })
+  dagreGraph.setGraph({ rankdir: direction })
 
   for (const node of nodes.value) {
     // if you need width+height of nodes for your layout, you can use the dimensions property of the internal node (`GraphNode` type)
