@@ -59,7 +59,7 @@ const zones: Zone[] = [
       {
         id: 'B',
         text: 'Choice B',
-        zoneTriggers: 'Zone-3',
+        zoneTriggers: 'Zone-3,Zone-6',
       },
     ],
   },
@@ -85,6 +85,10 @@ const zones: Zone[] = [
         text: 'Choice B',
         zoneTriggers: 'Zone-5',
       },
+      {
+        id: 'B',
+        text: 'Choice B',
+      },
     ],
   },
   {
@@ -105,36 +109,72 @@ const zones: Zone[] = [
     title: 'Zone 6',
     templateId: 'TextOnly1',
   },
+  {
+    __typename: 'Zone',
+    id: 'Zone-7',
+    title: 'Zone 7',
+    templateId: 'TextOnly1',
+  },
 ]
 
 function isBranch(zone: Zone) {
   return _.some(zone.choices?.map((choice) => choice.zoneTriggers))
 }
 
-type Connection = {
-  owner: Node
-  connection: { label: string; type: 'choice' | 'score' }
-  parent?: Connection
+function getLeafNodes(
+  node: Node,
+  nodes: Node[],
+  edges: Edge[],
+  filter: (edge: Edge) => boolean = () => true,
+  found: Node[] = [],
+) {
+  const children: Node[] = []
+
+  edges.filter(filter).forEach((edge) => {
+    if (edge.source === node.id) {
+      nodes.forEach((child) => {
+        if (child.data.fallback) {
+          found.push(child)
+        }
+
+        if (edge.target === child.id) {
+          children.push(child)
+        }
+      })
+    }
+  })
+
+  if (children.length) {
+    children.forEach((child) =>
+      getLeafNodes(child, nodes, edges, () => true, found),
+    )
+  } else {
+    found.push(node)
+  }
+
+  return _.uniq(found)
+}
+
+type Context = {
+  parent: Node
+  id: string
+  type: 'choice' | 'score'
 }
 
 function build(
-  branch: Zone[],
-  zones: Zone[] = branch,
+  zones: Zone[],
+  branch: Zone[] = zones,
   claims: { zone: Zone; owner: Zone }[] = [],
-  parent: Connection | undefined = undefined,
-  leaves: {
-    node: Node
-    fallback: Connection | undefined
-  }[] = [],
   nodes: Node[] = [],
   edges: Edge[] = [],
+  context: Context | undefined = undefined,
 ) {
   let previous: Node | undefined = undefined
 
   // on the main sequence, exclude zones that are claimed by any branch
   let skip: Zone[] = []
 
-  if (!parent) {
+  if (!context) {
     zones.forEach((zone) => {
       zone.choices?.forEach((choice) => {
         if (!choice.zoneTriggers) return
@@ -159,114 +199,113 @@ function build(
 
   // main loop
   branch.forEach((zone) => {
-    if (!parent && skip.includes(zone)) return
+    if (!context && skip.includes(zone)) return
 
     // create the zone node and add it
     const node = {
-      id: _.uniqueId(),
+      id: zone.id, // _.uniqueId()
       label: zone.title,
       position: { x: 0, y: 0 },
       data: {
         type: isBranch(zone) ? 'branching' : 'content',
+        fallback: false,
         zone,
       },
     }
 
     nodes.push(node)
 
-    // find leaf nodes that should be connected to the parent branch
-    const unresolved = leaves.filter((leaf) => leaf.fallback === parent)
-
-    if (unresolved.length) {
-      // connect branch leaf nodes to their fallback node
-      unresolved.forEach((leaf) => {
-        if (parent === leaf.fallback) {
-          edges.push({
-            id: `${leaf.node.id}-${node.id}`,
-            source: leaf.node.id,
-            target: node.id,
-          })
-
-          _.pull(leaves, leaf)
-        }
-      })
-    } else if (parent && !previous) {
+    if (context && !previous) {
       // new branch start - add an edge to the branching node
       const edge = {
-        id: `${parent.owner.id}-${node.id}`,
-        source: parent.owner.id,
+        id: `${context.parent.id}-${node.id}`,
+        source: context.parent.id,
         target: node.id,
-        label: parent.connection.label,
+        label: context.id,
       }
 
       edges.push(edge)
     } else if (previous) {
-      // add a default, sequential edge
-      const edge = {
-        id: `${previous.id}-${node.id}`,
-        source: previous.id,
-        target: node.id,
-      }
+      const root = context?.parent || nodes[0]
 
-      edges.push(edge)
+      getLeafNodes(
+        root,
+        nodes,
+        edges,
+        (edge) => edge.label === context?.id,
+      ).forEach((leaf) => {
+        if (
+          edges.find(
+            (edge) => edge.source === leaf.id && edge.target === node.id,
+          )
+        )
+          return
+
+        if (leaf.data.fallback) {
+          leaf.data.fallback = false
+        }
+
+        const edge = {
+          id: `${leaf.id}-${node.id}`,
+          source: leaf.id,
+          target: node.id,
+        }
+
+        edges.push(edge)
+      })
     }
 
     // for branching zones, create branches from choices
-    zone.choices?.forEach((choice) => {
-      const children: Zone[] = []
-      const destinations = _.uniq(choice.zoneTriggers?.split(','))
+    if (isBranch(zone)) {
+      zone.choices?.forEach((choice) => {
+        const children: Zone[] = []
+        const destinations = _.uniq(choice.zoneTriggers?.split(','))
 
-      destinations.forEach((destination) => {
-        const child = zones.find((zone) => zone.id === destination)
+        destinations.forEach((destination) => {
+          const child = zones.find((zone) => zone.id === destination)
 
-        if (child) {
-          const claim = claims.find((claim) => claim.zone === child)
+          if (child) {
+            const claim = claims.find((claim) => claim.zone === child)
 
-          // ignore zones that are claimed in a previous branch
-          if (claim && claim.owner !== zone) return
+            // ignore zones that are claimed in a previous branch
+            if (claim && claim.owner !== zone) return
 
-          children.push(child)
+            children.push(child)
 
-          if (!claim) {
-            claims.push({ zone: child, owner: zone })
+            if (!claim) {
+              claims.push({ zone: child, owner: zone })
+            }
           }
+        })
+
+        if (!destinations.length) {
+          node.data.fallback = true
         }
-      })
 
-      const fallback = parent
-
-      // specify the new parent branch context
-      const parent_ = {
-        owner: node,
-        connection: {
-          label: choice.id,
+        // specify the new parent branch context
+        const context = {
+          parent: node,
+          id: choice.id,
           type: 'choice' as const,
-        },
-      }
+        }
 
-      // for each branch, build the nodes & edges recursively
-      build(children, zones, claims, parent_, leaves, nodes, edges)
-
-      // store the last added node as a leaf, to be connected to the fallback branch later
-      const end = _.last(nodes)
-      if (end) {
-        leaves.push({ node: end, fallback })
-        console.log({ node: end, fallback })
-      }
-    })
+        // for each branch, build the nodes & edges recursively
+        build(zones, children, claims, nodes, edges, context)
+      })
+    }
 
     previous = node
   })
 
-  return { nodes, edges, leaves }
+  return { nodes, edges }
 }
 
 const init = build(zones)
 
-console.log(init.leaves)
-
 const nodes = ref(init.nodes)
 const edges = ref(init.edges)
+
+console.log(init)
 
 const { findNode } = useVueFlow()
 
@@ -277,7 +316,7 @@ function layout(direction: string) {
   dagreGraph.setDefaultEdgeLabel(() => ({}))
 
   const isHorizontal = direction === 'LR'
-  dagreGraph.setGraph({ rankdir: direction })
+  dagreGraph.setGraph({ rankdir: direction, align: 'UL' })
 
   for (const node of nodes.value) {
     // if you need width+height of nodes for your layout, you can use the dimensions property of the internal node (`GraphNode` type)
