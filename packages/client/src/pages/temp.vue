@@ -163,7 +163,7 @@ type Context = {
 
 function build(
   zones: Zone[],
-  branch: Zone[] = [],
+  branch: Zone[] = zones,
   claims: { zone: Zone; owner: Zone }[] = [],
   nodes: Node[] = [],
   edges: Edge[] = [],
