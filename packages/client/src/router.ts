@@ -15,6 +15,14 @@ const router = createRouter({
       path: '/document',
       component: () => import('./pages/document.vue'),
     },
+    {
+      path: '/diagram',
+      component: () => import('./pages/diagram.vue'),
+    },
+    {
+      path: '/zones',
+      component: () => import('./pages/zones.vue'),
+    },
   ],
 })
 

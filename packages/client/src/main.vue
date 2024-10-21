@@ -10,4 +10,13 @@ html {
   font-size: 14px;
   /* line-height: normal; */
 }
+
+#app {
+  height: 100vh;
+  width: 100vw;
+  /* position: relative; */
+  /* display: flex; */
+  /* flex-direction: column; */
+  overflow: auto;
+}
 </style>
