@@ -23,6 +23,10 @@ const router = createRouter({
       path: '/zones',
       component: () => import('./pages/zones.vue'),
     },
+    {
+      path: '/temp',
+      component: () => import('./pages/temp.vue'),
+    },
   ],
 })
 
