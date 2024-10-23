@@ -59,6 +59,11 @@ const zones: Zone[] = [
     templateId: 'CheckPoint1',
     choices: [
       {
+        id: 'C',
+        text: 'Choice C',
+        zoneTriggers: 'Zone-8',
+      },
+      {
         id: 'A',
         text: 'Choice A',
         zoneTriggers: 'Zone-2:Zone-6',
@@ -118,6 +123,12 @@ const zones: Zone[] = [
     __typename: 'Zone',
     id: 'Zone-7',
     title: 'Zone 7',
+    templateId: 'TextOnly1',
+  },
+  {
+    __typename: 'Zone',
+    id: 'Zone-8',
+    title: 'Zone 8',
     templateId: 'TextOnly1',
   },
 ]
@@ -328,6 +339,8 @@ const edges = ref(init.edges)
 
 const { findNode } = useVueFlow()
 
+const NODE_SEP = 100
+
 function layout(direction: string) {
   // we create a new graph instance, in case some nodes/edges were removed, otherwise dagre would act as if they were still there
   const dagreGraph = new dagre.graphlib.Graph()
@@ -338,6 +351,8 @@ function layout(direction: string) {
   dagreGraph.setGraph({
     rankdir: direction,
     align: direction === 'LR' ? 'DR' : 'DL',
+    nodesep: NODE_SEP,
+    ranksep: NODE_SEP,
   })
 
   for (const node of nodes.value) {
@@ -355,10 +370,35 @@ function layout(direction: string) {
   }
 
   dagre.layout(dagreGraph)
+  const dagreNodes = nodes.value.map((node) => dagreGraph.node(node.id))
 
-  // set nodes with updated positions
-  nodes.value = nodes.value.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id)
+  if (isHorizontal) {
+    dagreNodes.forEach((dagreNode) => {
+      const nodesInRank = dagreNodes.filter(
+        (nodeInRank) => nodeInRank.rank === dagreNode.rank,
+      )
+
+      const i = nodesInRank.indexOf(dagreNode)
+      if (i > 0) {
+        const previousNodeInRank = nodesInRank[i - 1]
+        const delta = -(
+          dagreNode.y -
+          (previousNodeInRank.y + previousNodeInRank.height) -
+          NODE_SEP
+        )
+
+        const nodesInline = dagreNodes.filter(
+          (nodeInline) => nodeInline.y === dagreNode.y,
+        )
+        nodesInline.forEach((nodeInline) => {
+          nodeInline.y += delta
+        })
+      }
+    })
+  }
+
+  nodes.value = nodes.value.map((node, i) => {
+    const nodeWithPosition = dagreNodes[i]
 
     return {
       ...node,
@@ -367,5 +407,6 @@ function layout(direction: string) {
       position: { x: nodeWithPosition.x, y: nodeWithPosition.y },
     }
   })
+  // console.log(dagreNodes[0])
 }
 </script>
