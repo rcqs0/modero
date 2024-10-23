@@ -58,11 +58,11 @@ const zones: Zone[] = [
     title: 'Zone 1',
     templateId: 'CheckPoint1',
     choices: [
-      {
-        id: 'C',
-        text: 'Choice C',
-        zoneTriggers: 'Zone-8',
-      },
+      // {
+      //   id: 'C',
+      //   text: 'Choice C',
+      //   zoneTriggers: 'Zone-8',
+      // },
       {
         id: 'A',
         text: 'Choice A',
@@ -339,7 +339,8 @@ const edges = ref(init.edges)
 
 const { findNode } = useVueFlow()
 
-const NODE_SEP = 100
+const NODE_SEP = 50
+const RANK_SEP = undefined
 
 function layout(direction: string) {
   // we create a new graph instance, in case some nodes/edges were removed, otherwise dagre would act as if they were still there
@@ -350,9 +351,9 @@ function layout(direction: string) {
   const isHorizontal = direction === 'LR'
   dagreGraph.setGraph({
     rankdir: direction,
-    align: direction === 'LR' ? 'DR' : 'DL',
+    align: direction === 'LR' ? 'DL' : 'DL',
     nodesep: NODE_SEP,
-    ranksep: NODE_SEP,
+    ranksep: RANK_SEP,
   })
 
   for (const node of nodes.value) {
@@ -395,6 +396,8 @@ function layout(direction: string) {
         })
       }
     })
+  } else {
+    // TODO
   }
 
   nodes.value = nodes.value.map((node, i) => {
