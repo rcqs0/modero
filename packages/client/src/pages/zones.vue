@@ -97,7 +97,7 @@ const zones: Zone[] = [
       {
         id: 'B',
         text: 'Choice B',
-        zoneTriggers: 'Zone-5',
+        zoneTriggers: 'Zone-4,Zone-5',
       },
     ],
   },
@@ -173,7 +173,7 @@ function getLeafNodes(
 
 function makeNode(zones: Zone[]) {
   return {
-    id: _.map(zones, 'id').join(','), // _.uniqueId()
+    id: _.uniqueId(),
     type: 'default',
     data: {
       label: _.map(zones, 'title').join(','),
@@ -269,7 +269,7 @@ function build(
         root,
         nodes,
         edges,
-        root.data.branching
+        root === nodes[0] && root.data.branching
           ? () => true
           : (edge) => edge.label === context?.branch,
       ).forEach((leaf) => {
@@ -339,6 +339,8 @@ const edges = ref(init.edges)
 
 const { findNode } = useVueFlow()
 
+const ADJUST_NODES = false
+
 const NODE_SEP = 60
 const RANK_SEP = 60
 const EDGE_SEP = 20
@@ -375,56 +377,55 @@ function layout(direction: string) {
   dagre.layout(dagreGraph)
   const dagreNodes = nodes.value.map((node) => dagreGraph.node(node.id))
 
-  if (isHorizontal) {
-    dagreNodes.forEach((dagreNode) => {
-      const nodesInRank = dagreNodes.filter(
-        (nodeInRank) => nodeInRank.rank === dagreNode.rank,
-      )
-
-      const i = nodesInRank.indexOf(dagreNode)
-      if (i > 0) {
-        const previousNodeInRank = nodesInRank[i - 1]
-        const delta = -(
-          dagreNode.y -
-          (previousNodeInRank.y + previousNodeInRank.height) -
-          NODE_SEP
+  if (ADJUST_NODES) {
+    if (isHorizontal) {
+      dagreNodes.forEach((dagreNode) => {
+        const nodesInRank = dagreNodes.filter(
+          (nodeInRank) => nodeInRank.rank === dagreNode.rank,
         )
 
-        const nodesInline = dagreNodes.filter(
-          (nodeInline) => nodeInline.y === dagreNode.y,
+        const i = nodesInRank.indexOf(dagreNode)
+        if (i > 0) {
+          const previousNodeInRank = nodesInRank[i - 1]
+          const delta = -(
+            dagreNode.y -
+            (previousNodeInRank.y + previousNodeInRank.height) -
+            NODE_SEP
+          )
+
+          const nodesInline = dagreNodes.filter(
+            (nodeInline) => nodeInline.y === dagreNode.y,
+          )
+          nodesInline.forEach((nodeInline) => {
+            nodeInline.y += delta
+          })
+        }
+      })
+    } else {
+      const ranks = _.uniq(dagreNodes.map((dagreNode) => dagreNode.rank)).sort()
+
+      ranks.forEach((rank) => {
+        const rankIndex = ranks.indexOf(rank)
+        if (rankIndex === ranks.length - 1) return
+
+        const nodesInRank = dagreNodes.filter(
+          (nodeInRank) => nodeInRank.rank === rank,
         )
-        nodesInline.forEach((nodeInline) => {
-          nodeInline.y += delta
-        })
-      }
-    })
-  } else {
-    const ranks = _.uniq(dagreNodes.map((dagreNode) => dagreNode.rank)).sort()
+        const nodesInNextRank = dagreNodes.filter(
+          (dagreNode) => dagreNode.rank === ranks[rankIndex + 1],
+        )
 
-    ranks.forEach((rank) => {
-      const rankIndex = ranks.indexOf(rank)
-      if (rankIndex === ranks.length - 1) return
+        const rankMaxY = _.max(
+          nodesInRank.map((nodeInRank) => nodeInRank.y + nodeInRank.height),
+        )!
+        const nexRankMinY = _.max(
+          nodesInNextRank.map((nodesInNextRank) => nodesInNextRank.y),
+        )!
+        const delta = -(nexRankMinY - rankMaxY - RANK_SEP)
 
-      const nodesInRank = dagreNodes.filter(
-        (nodeInRank) => nodeInRank.rank === rank,
-      )
-
-      const rankMaxY = _.max(
-        nodesInRank.map((nodeInRank) => nodeInRank.y + nodeInRank.height),
-      )!
-
-      const nodesInNextRank = dagreNodes.filter(
-        (dagreNode) => dagreNode.rank === ranks[rankIndex + 1],
-      )
-
-      const nexRankMinY = _.max(
-        nodesInNextRank.map((nodesInNextRank) => nodesInNextRank.y),
-      )!
-
-      const delta = -(nexRankMinY - rankMaxY - RANK_SEP)
-
-      nodesInNextRank.map((nodeInNextRank) => (nodeInNextRank.y += delta))
-    })
+        nodesInNextRank.map((nodeInNextRank) => (nodeInNextRank.y += delta))
+      })
+    }
   }
 
   nodes.value = nodes.value.map((node, i) => {
