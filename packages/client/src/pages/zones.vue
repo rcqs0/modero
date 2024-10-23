@@ -204,6 +204,28 @@ function makeClaim(
   return false
 }
 
+function getClaimedZones(zones: Zone[]) {
+  let claimed: Zone[] = []
+
+  zones.forEach((zone) => {
+    zone.choices?.forEach((choice) => {
+      if (!choice.zoneTriggers) return
+
+      Array.from(choice.zoneTriggers.matchAll(/[^:,]+/g))
+        .map((result) => result[0])
+        .forEach((id) => {
+          const found = zones.find((zone) => zone.id === id)
+
+          if (found) {
+            claimed.push(found)
+          }
+        })
+    })
+  })
+
+  return claimed
+}
+
 function build(
   path: (Zone | Zone[])[],
   zones: Zone[] = _.flatten(path),
@@ -217,35 +239,10 @@ function build(
   let previous: Node | undefined = undefined
 
   // on the main sequence, exclude zones that are claimed by any branch
-  let skip: Zone[] = []
-
-  if (!context) {
-    zones.forEach((zone) => {
-      zone.choices?.forEach((choice) => {
-        if (!choice.zoneTriggers) return
-
-        // find all included branch zone ids whether they are grouped or not
-        const ids = [...choice.zoneTriggers.matchAll(/[^:,]+/g)].map(
-          (result) => result[0],
-        )
-
-        ids.forEach((id) => {
-          const found = zones.find((zone) => {
-            return zone.id === id
-          })
-
-          if (found) {
-            skip.push(found)
-          }
-        })
-      })
-    })
-  }
+  const unclaimed = !context ? _.difference(path, getClaimedZones(zones)) : path
 
   // main loop
-  path.forEach((segment) => {
-    if (!context && _.intersection(skip, _.castArray(segment)).length) return
-
+  unclaimed.forEach((segment) => {
     // create the zone node and add it
     const node = makeNode(_.castArray(segment))
     nodes.push(node)
@@ -284,12 +281,14 @@ function build(
           const parts = sequence.split(':')
 
           if (parts.length === 1) {
+            // single zone sequence
             const child = zones.find((zone) => zone.id === sequence)
 
             if (child && makeClaim(child, zone, claims)) {
               children.push(child)
             }
           } else {
+            // zone group sequence
             const group = _.compact(
               parts.map((id) => zones.find((zone) => zone.id === id)),
             ).filter((child) => makeClaim(child, zone, claims))
