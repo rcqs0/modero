@@ -46,12 +46,12 @@ type Zone = {
 }
 
 const zones: Zone[] = [
-  {
-    __typename: 'Zone',
-    id: 'Zone-0',
-    title: 'Zone 0',
-    templateId: 'TextOnly1',
-  },
+  // {
+  //   __typename: 'Zone',
+  //   id: 'Zone-0',
+  //   title: 'Zone 0',
+  //   templateId: 'TextOnly1',
+  // },
   {
     __typename: 'Zone',
     id: 'Zone-1',
@@ -167,6 +167,7 @@ function makeNode(zones: Zone[]) {
     data: {
       label: _.map(zones, 'title').join(','),
       type: zones.length > 1 ? 'group' : 'zone',
+      branching: isBranchingZone(_.last(zones)!),
       fallback: false,
       zones,
     },
@@ -257,7 +258,9 @@ function build(
         root,
         nodes,
         edges,
-        (edge) => edge.label === context?.branch,
+        root.data.branching
+          ? () => true
+          : (edge) => edge.label === context?.branch,
       ).forEach((leaf) => {
         if (leaf.data.fallback) {
           leaf.data.fallback = false
@@ -319,8 +322,6 @@ function build(
 }
 
 const init = build(zones)
-
-console.log(init)
 
 const nodes = ref(init.nodes)
 const edges = ref(init.edges)
