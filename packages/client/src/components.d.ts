@@ -27,6 +27,7 @@ declare module 'vue' {
     DataTable: typeof import('primevue/datatable')['default']
     DatePicker: typeof import('primevue/datepicker')['default']
     Diagram: typeof import('./components/Diagram.vue')['default']
+    DiagramNode: typeof import('./components/DiagramNode.vue')['default']
     Divider: typeof import('primevue/divider')['default']
     Editor: typeof import('primevue/editor')['default']
     EffectForm: typeof import('./components/forms/EffectForm.vue')['default']
@@ -59,8 +60,11 @@ declare module 'vue' {
     Tag: typeof import('primevue/tag')['default']
     Textarea: typeof import('primevue/textarea')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
+    ToolbarNode: typeof import('./components/ToolbarNode.vue')['default']
     TreeTable: typeof import('primevue/treetable')['default']
     UncertaintyForm: typeof import('./components/forms/UncertaintyForm.vue')['default']
+    ZoneDiagram: typeof import('./components/zone-diagram/ZoneDiagram.vue')['default']
+    ZoneDiagramNode: typeof import('./components/zone-diagram/ZoneDiagramNode.vue')['default']
     Zwutton: typeof import('./components/Zwutton.vue')['default']
   }
 }
