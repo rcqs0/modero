@@ -9,6 +9,10 @@
   >
     <Background />
     <MiniMap />
+    <Controls position="top-right" />
+    <!-- <template #node-default="props">
+      <DiagramNode :id="props.id" :data="props.data" />
+    </template> -->
   </VueFlow>
   <!-- <div class="absolute top-0 right-0 h-full overflow-auto text-sm">
     <pre>{{ zones }}</pre>
@@ -20,11 +24,14 @@ import { ref } from 'vue'
 import { VueFlow, useVueFlow, Position, Node, Edge } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { MiniMap } from '@vue-flow/minimap'
+import { Controls } from '@vue-flow/controls'
+
 import dagre from '@dagrejs/dagre'
 import _ from 'lodash'
 
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
+import '@vue-flow/controls/dist/style.css'
 
 type Zone = {
   __typename: 'Zone'
@@ -54,13 +61,13 @@ const zones: Zone[] = [
       {
         id: 'A',
         text: 'Choice A',
-        zoneTriggers: 'Zone-2,Zone-6',
+        zoneTriggers: 'Zone-2:Zone-6',
       },
       {
         id: 'B',
         text: 'Choice B',
         // zoneTriggers: 'Zone-3,Zone-6',
-        zoneTriggers: 'Zone-6:Zone-3',
+        zoneTriggers: 'Zone-3',
         // zoneTriggers: 'Zone-3',
       },
     ],
@@ -115,7 +122,7 @@ const zones: Zone[] = [
   },
 ]
 
-function isBranch(zone: Zone) {
+function isBranchingZone(zone: Zone) {
   return _.some(zone.choices?.map((choice) => choice.zoneTriggers))
 }
 
@@ -153,19 +160,59 @@ function getLeafNodes(
   return _.uniq(found)
 }
 
-type Context = {
-  parent: Node
-  id: string
-  type: 'choice' | 'score'
+function makeNode(zones: Zone[]) {
+  return {
+    id: _.map(zones, 'id').join(','), // _.uniqueId()
+    type: 'default',
+    data: {
+      label: _.map(zones, 'title').join(','),
+      type: zones.length > 1 ? 'group' : 'zone',
+      fallback: false,
+      zones,
+    },
+    height: 40 * zones.length,
+    position: { x: 0, y: 0 },
+  }
+}
+
+function makeEdge(from: Node, to: Node, label?: string) {
+  return {
+    id: `${from.id}-${to.id}`,
+    source: from.id,
+    target: to.id,
+    label,
+  }
+}
+
+function makeClaim(
+  zone: Zone,
+  owner: Zone,
+  claims: { zone: Zone; owner: Zone }[] = [],
+) {
+  const claim = claims.find((claim) => claim.zone === zone)
+
+  if (!claim) {
+    // not claimed yet, add new claim
+    claims.push({ zone, owner })
+    return true
+  } else if (claim.owner === owner) {
+    // already claimed by owner
+    return true
+  }
+
+  // claimed by another zone
+  return false
 }
 
 function build(
-  zones: Zone[],
-  branch: (Zone | Zone[])[] = zones,
+  path: (Zone | Zone[])[],
+  zones: Zone[] = _.flatten(path),
   claims: { zone: Zone; owner: Zone }[] = [],
   nodes: Node[] = [],
   edges: Edge[] = [],
-  context: Context | undefined = undefined,
+  context:
+    | { parent: Node; branch: string; type: 'choice' | 'score' }
+    | undefined = undefined,
 ) {
   let previous: Node | undefined = undefined
 
@@ -196,49 +243,16 @@ function build(
   }
 
   // main loop
-  branch.forEach((zone) => {
-    if (!context && _.intersection(skip, _.castArray(zone)).length) return
-
-    let node: Node
+  path.forEach((segment) => {
+    if (!context && _.intersection(skip, _.castArray(segment)).length) return
 
     // create the zone node and add it
-    if (Array.isArray(zone)) {
-      // add group node
-      node = {
-        id: _.map(zone, 'id').join(','), // _.uniqueId()
-        label: _.map(zone, 'title').join(','),
-        position: { x: 0, y: 0 },
-        data: {
-          type: 'group',
-          fallback: false,
-          zone,
-        },
-      }
-    } else {
-      node = {
-        id: zone.id, // _.uniqueId()
-        label: zone.title,
-        position: { x: 0, y: 0 },
-        data: {
-          type: isBranch(zone) ? 'branching' : 'content',
-          fallback: false,
-          zone,
-        },
-      }
-    }
-
+    const node = makeNode(_.castArray(segment))
     nodes.push(node)
 
     if (context && !previous) {
       // new branch start - add an edge to the branching node
-      const edge = {
-        id: `${context.parent.id}-${node.id}`,
-        source: context.parent.id,
-        target: node.id,
-        label: context.id,
-      }
-
-      edges.push(edge)
+      edges.push(makeEdge(context.parent, node, context.branch))
     } else if (previous) {
       const root = context?.parent || nodes[0]
 
@@ -246,88 +260,56 @@ function build(
         root,
         nodes,
         edges,
-        (edge) => edge.label === context?.id,
+        (edge) => edge.label === context?.branch,
       ).forEach((leaf) => {
-        if (
-          edges.find(
-            (edge) => edge.source === leaf.id && edge.target === node.id,
-          )
-        )
-          return
-
         if (leaf.data.fallback) {
           leaf.data.fallback = false
         }
 
-        const edge = {
-          id: `${leaf.id}-${node.id}`,
-          source: leaf.id,
-          target: node.id,
-        }
-
-        edges.push(edge)
+        edges.push(makeEdge(leaf, node))
       })
     }
 
-    const zone_ = _.last(_.castArray(zone))!
+    // if segment has multiple zones, only the last can branch
+    const zone = _.last(_.castArray(segment))!
 
     // for branching zones, create branches from choices
-    if (isBranch(zone_)) {
-      zone_.choices?.forEach((choice) => {
+    if (isBranchingZone(zone)) {
+      zone.choices?.forEach((choice) => {
         const children: (Zone | Zone[])[] = []
-        const destinations = _.uniq(choice.zoneTriggers?.split(','))
+        const sequences = _.uniq(choice.zoneTriggers?.split(','))
 
-        destinations.forEach((destination) => {
-          const parts = destination.split(':')
+        // construct branch path from zone trigger sequences
+        sequences.forEach((sequence) => {
+          const parts = sequence.split(':')
 
           if (parts.length === 1) {
-            const child = zones.find((zone) => zone.id === destination)
+            const child = zones.find((zone) => zone.id === sequence)
 
-            if (child) {
-              const claim = claims.find((claim) => claim.zone === child)
-
-              // ignore zones that are claimed in a previous branch
-              if (claim && claim.owner !== zone) return
-
+            if (child && makeClaim(child, zone, claims)) {
               children.push(child)
-
-              if (!claim) {
-                claims.push({ zone: child, owner: zone_ })
-              }
             }
           } else {
             const group = _.compact(
               parts.map((id) => zones.find((zone) => zone.id === id)),
-            )
+            ).filter((child) => makeClaim(child, zone, claims))
 
-            group.forEach((child) => {
-              const claim = claims.find((claim) => claim.zone === child)
-
-              // ignore zones that are claimed in a previous branch
-              if (claim && claim.owner !== zone) return
-
-              if (!claim) {
-                claims.push({ zone: child, owner: zone_ })
-              }
-            })
-
-            children.push(group)
+            if (group.length) {
+              children.push(group)
+            }
           }
         })
 
-        if (!destinations.length) {
+        if (!children.length) {
           node.data.fallback = true
         }
 
-        // specify the new parent branch context
-        const context = {
-          parent: node,
-          id: choice.id,
-          type: 'choice' as const,
-        }
-
         // for each branch, build the nodes & edges recursively
-        build(zones, children, claims, nodes, edges, context)
+        build(children, zones, claims, nodes, edges, {
+          parent: node,
+          branch: choice.id,
+          type: 'choice',
+        })
       })
     }
 
@@ -339,10 +321,10 @@ function build(
 
 const init = build(zones)
 
+console.log(init)
+
 const nodes = ref(init.nodes)
 const edges = ref(init.edges)
-
-// console.log(init)
 
 const { findNode } = useVueFlow()
 
@@ -353,7 +335,7 @@ function layout(direction: string) {
   dagreGraph.setDefaultEdgeLabel(() => ({}))
 
   const isHorizontal = direction === 'LR'
-  dagreGraph.setGraph({ rankdir: direction })
+  dagreGraph.setGraph({ rankdir: direction, align: 'UL' })
 
   for (const node of nodes.value) {
     // if you need width+height of nodes for your layout, you can use the dimensions property of the internal node (`GraphNode` type)
