@@ -5,7 +5,7 @@
     :fit-view-on-init="false"
     :default-viewport="{ zoom: 1 }"
     :default-edge-options="{ type: undefined }"
-    @nodes-initialized="layout('LR')"
+    @nodes-initialized="layout('UD')"
   >
     <Background />
     <MiniMap />
@@ -339,8 +339,9 @@ const edges = ref(init.edges)
 
 const { findNode } = useVueFlow()
 
-const NODE_SEP = 50
-const RANK_SEP = undefined
+const NODE_SEP = 60
+const RANK_SEP = 60
+const EDGE_SEP = 20
 
 function layout(direction: string) {
   // we create a new graph instance, in case some nodes/edges were removed, otherwise dagre would act as if they were still there
@@ -354,6 +355,7 @@ function layout(direction: string) {
     align: direction === 'LR' ? 'DL' : 'DL',
     nodesep: NODE_SEP,
     ranksep: RANK_SEP,
+    edgesep: EDGE_SEP,
   })
 
   for (const node of nodes.value) {
@@ -397,7 +399,32 @@ function layout(direction: string) {
       }
     })
   } else {
-    // TODO
+    const ranks = _.uniq(dagreNodes.map((dagreNode) => dagreNode.rank)).sort()
+
+    ranks.forEach((rank) => {
+      const rankIndex = ranks.indexOf(rank)
+      if (rankIndex === ranks.length - 1) return
+
+      const nodesInRank = dagreNodes.filter(
+        (nodeInRank) => nodeInRank.rank === rank,
+      )
+
+      const rankMaxY = _.max(
+        nodesInRank.map((nodeInRank) => nodeInRank.y + nodeInRank.height),
+      )!
+
+      const nodesInNextRank = dagreNodes.filter(
+        (dagreNode) => dagreNode.rank === ranks[rankIndex + 1],
+      )
+
+      const nexRankMinY = _.max(
+        nodesInNextRank.map((nodesInNextRank) => nodesInNextRank.y),
+      )!
+
+      const delta = -(nexRankMinY - rankMaxY - RANK_SEP)
+
+      nodesInNextRank.map((nodeInNextRank) => (nodeInNextRank.y += delta))
+    })
   }
 
   nodes.value = nodes.value.map((node, i) => {
