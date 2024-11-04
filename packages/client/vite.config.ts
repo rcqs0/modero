@@ -149,4 +149,8 @@ export default defineConfig({
       },
     },
   },
+
+  optimizeDeps: {
+    exclude: ['@vue/repl'],
+  },
 })

@@ -27,6 +27,10 @@ const router = createRouter({
       path: '/temp',
       component: () => import('./pages/temp.vue'),
     },
+    {
+      path: '/repl',
+      component: () => import('./pages/repl.vue'),
+    },
   ],
 })
 
