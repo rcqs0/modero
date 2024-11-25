@@ -38,6 +38,52 @@ export default function object<
     deleted.forEach((key) => untrack(key))
   })
 
+  const bindings = new Map<string | null, Binding>()
+
+  function listener(event: Y.YMapEvent<any>) {
+    const added: string[] = []
+    const updated: string[] = []
+    const deleted: string[] = []
+
+    event.changes.keys.forEach((change, key) => {
+      if (change.action === 'add') added.push(key)
+      if (change.action === 'update') {
+        if (change.oldValue !== event.target.get(key)) {
+          updated.push(key)
+        }
+      }
+      if (change.action === 'delete') deleted.push(key)
+    })
+
+    if (added.length || deleted.length) {
+      bindings.get(null)?.trigger()
+    }
+
+    updated.forEach((key) => {
+      bindings.get(key)?.trigger()
+    })
+
+    deleted.forEach((key) => bindings.delete(key))
+    if (!bindings.size) {
+      map.unobserve(listener)
+    }
+  }
+
+  function observe(key: null | string = null) {
+    if (!bindings.size) {
+      map.observe(listener)
+    }
+
+    let binding = bindings.get(key)
+
+    if (!binding) {
+      binding = bind()
+      bindings.set(key, binding)
+    }
+
+    binding.track()
+  }
+
   // create new proxy
   const proxy = new Proxy({} as T, {
     get(target, prop, _receiver) {

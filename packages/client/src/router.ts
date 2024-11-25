@@ -78,6 +78,10 @@ const router = createRouter({
       path: '/repl',
       component: () => import('./pages/repl.vue'),
     },
+    {
+      path: '/profiles',
+      component: () => import('./pages/profiles.vue'),
+    },
   ],
 })
 
