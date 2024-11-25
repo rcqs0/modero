@@ -60,26 +60,59 @@ export function transact<T>(
   return f()
 }
 
-// create reactive binding
-export function bind() {
-  const binding = shallowRef()
-
-  function track() {
-    return binding.value
-  }
-
-  function trigger() {
-    triggerRef(binding)
-  }
-
-  return { track, trigger }
-}
-
-export type Binding = ReturnType<typeof bind>
-
-export function bind2<T>(
+// bind yobject to the reactivity system
+export function bind<T extends Y.YEvent<any>>(
   value: Y.AbstractType<any>,
-  listener: (event: T, bindings: Map<string | number | null, Binding>) => any,
+  listener: (
+    event: T,
+    trigger: (key?: string | number) => void,
+    untrack: (key?: string | number) => void,
+  ) => any,
 ) {
-  const bindings = new Map<string | number | null, Binding>()
+  const bindings = new Map<
+    string | number | null,
+    {
+      track: () => any
+      trigger: () => void
+    }
+  >()
+
+  function trigger(key: string | number | null = null) {
+    bindings.get(key)?.trigger()
+  }
+
+  function untrack(key: string | number | null = null) {
+    bindings.delete(key)
+  }
+
+  function observer(event: T) {
+    listener(event, trigger, untrack)
+
+    if (!bindings.size) {
+      value.unobserve(observer)
+    }
+  }
+
+  function track(key: string | number | null = null) {
+    if (!bindings.size) {
+      value.observe(observer)
+    }
+
+    let binding = bindings.get(key)
+
+    if (!binding) {
+      const observable = shallowRef()
+
+      binding = {
+        track: () => observable.value,
+        trigger: () => triggerRef(observable),
+      }
+
+      bindings.set(key, binding)
+    }
+
+    binding.track()
+  }
+
+  return track
 }

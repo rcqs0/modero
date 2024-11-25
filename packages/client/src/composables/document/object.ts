@@ -1,5 +1,5 @@
 import * as Y from 'yjs'
-import { type Binding, YOBJECT_KEY, proxify, convert, bind } from './utils'
+import { YOBJECT_KEY, proxify, convert, bind } from './utils'
 
 // proxy cache
 const objects = new WeakMap<Y.Map<any>>()
@@ -14,9 +14,7 @@ export default function object<
   // return cached proxy if available
   if (objects.has(map)) return objects.get(map)
 
-  const bindings = new Map<string | null, Binding>()
-
-  function listener(event: Y.YMapEvent<any>) {
+  const track = bind(map, (event: Y.YMapEvent<any>, trigger, untrack) => {
     const added: string[] = []
     const updated: string[] = []
     const deleted: string[] = []
@@ -32,33 +30,15 @@ export default function object<
     })
 
     if (added.length || deleted.length) {
-      bindings.get(null)?.trigger()
+      trigger()
     }
 
     updated.forEach((key) => {
-      bindings.get(key)?.trigger()
+      trigger(key)
     })
 
-    deleted.forEach((key) => bindings.delete(key))
-    if (!bindings.size) {
-      map.unobserve(listener)
-    }
-  }
-
-  function observe(key: null | string = null) {
-    if (!bindings.size) {
-      map.observe(listener)
-    }
-
-    let binding = bindings.get(key)
-
-    if (!binding) {
-      binding = bind()
-      bindings.set(key, binding)
-    }
-
-    binding.track()
-  }
+    deleted.forEach((key) => untrack(key))
+  })
 
   // create new proxy
   const proxy = new Proxy({} as T, {
@@ -75,7 +55,7 @@ export default function object<
         return true
       }
 
-      observe(prop)
+      track(prop)
 
       return proxify(map.get(prop))
     },
@@ -96,7 +76,7 @@ export default function object<
     has(_target, prop) {
       if (typeof prop !== 'string') return false
 
-      observe()
+      track()
 
       return map.has(prop)
     },
@@ -109,7 +89,7 @@ export default function object<
       }
     },
     ownKeys(_target) {
-      observe()
+      track()
 
       return Array.from(map.keys())
     },

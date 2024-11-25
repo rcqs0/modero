@@ -1,12 +1,5 @@
 import * as Y from 'yjs'
-import {
-  type Binding,
-  YOBJECT_KEY,
-  proxify,
-  convert,
-  transact,
-  bind,
-} from './utils'
+import { YOBJECT_KEY, proxify, convert, transact, bind } from './utils'
 
 // proxy cache
 const arrays = new WeakMap<Y.Array<any>>()
@@ -32,47 +25,25 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
   // return cached proxy if available
   if (arrays.has(arr)) return arrays.get(arr)
 
-  const bindings = new Map<number | null, Binding>()
-
-  function listener(event: Y.YArrayEvent<any>) {
+  const track = bind(arr, (event: Y.YArrayEvent<any>, trigger, untrack) => {
+    console.log(event.changes)
     const start = event.delta[0]?.retain || 0
     const length = event.target.length
 
-    for (const [key, binding] of bindings) {
-      if (key === null) {
-        if (event.changes.added.size !== event.changes.deleted.size) {
-          binding.trigger()
-        }
-      } else if (typeof key === 'number') {
-        if (key >= start) {
-          binding.trigger()
-        }
+    if (event.changes.added.size !== event.changes.deleted.size) {
+      trigger()
+    }
 
-        if (key >= length) {
-          bindings.delete(key)
-        }
+    for (let key = 0; key < length; key++) {
+      if (key >= start) {
+        trigger(key)
+      }
+
+      if (key >= length) {
+        untrack(key)
       }
     }
-
-    if (!bindings.size) {
-      arr.unobserve(listener)
-    }
-  }
-
-  function observe(key: number | null = null) {
-    if (!bindings.size) {
-      arr.observe(listener)
-    }
-
-    let binding = bindings.get(key)
-
-    if (!binding) {
-      binding = bind()
-      bindings.set(key, binding)
-    }
-
-    binding.track()
-  }
+  })
 
   // create new proxy
   const proxy = new Proxy([] as T[], {
@@ -92,13 +63,13 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
       }
 
       if (typeof key === 'number') {
-        observe(key)
+        track(key)
 
         return proxify(arr.get(key))
       }
 
       if (key === 'length') {
-        observe()
+        track()
 
         return arr.length
       }
@@ -266,7 +237,7 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
     },
 
     ownKeys(_target) {
-      observe()
+      track()
 
       const keys: string[] = []
 
