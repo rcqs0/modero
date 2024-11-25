@@ -23,16 +23,14 @@ const doc = useDocument({
 
 function update() {
   doc.course.title = 'Yaaaaaargh'
-
-  doc.arr.reverse()
 }
 
 function temp() {
   transact(doc.arr, () => {
-    // doc.arr.push('f', 'g')
+    doc.arr.push('f', 'g')
     // doc.arr.splice(1, 2, 'x')
     // doc.arr.unshift('x')
-    doc.arr.reverse()
+    // doc.arr.reverse()
   })
 
   console.log(inspect(doc.arr)?.toJSON())
