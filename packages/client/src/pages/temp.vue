@@ -6,7 +6,6 @@
 
 <script lang="ts" setup>
 import useDocument, { inspect, transact } from '@/composables/document'
-import { YOBJECT_KEY } from '@/composables/document/utils'
 import * as Y from 'yjs'
 
 defineProps<{}>()
@@ -33,6 +32,13 @@ function temp() {
     // doc.arr.reverse()
   })
 
-  console.log(inspect(doc.arr)?.toJSON())
+  const d = new Y.Doc()
+  const a = d.getArray('arr')
+
+  a.insert(0, [1, 2, null, 3])
+
+  console.log(a.toJSON())
+
+  // console.log(inspect(doc.arr)?.toJSON())
 }
 </script>

@@ -63,7 +63,7 @@ export function transact<T>(
 // bind yobject to the reactivity system
 export function bind<T extends Y.YEvent<any>>(
   value: Y.AbstractType<any>,
-  listener: (
+  observer: (
     event: T,
     trigger: (key?: string | number) => void,
     untrack: (key?: string | number) => void,
@@ -85,17 +85,17 @@ export function bind<T extends Y.YEvent<any>>(
     bindings.delete(key)
   }
 
-  function observer(event: T) {
-    listener(event, trigger, untrack)
+  function observe(event: T) {
+    observer(event, trigger, untrack)
 
     if (!bindings.size) {
-      value.unobserve(observer)
+      value.unobserve(observe)
     }
   }
 
   function track(key: string | number | null = null) {
     if (!bindings.size) {
-      value.observe(observer)
+      value.observe(observe)
     }
 
     let binding = bindings.get(key)
