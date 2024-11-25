@@ -1,12 +1,5 @@
 import * as Y from 'yjs'
-import {
-  type Binding,
-  YOBJECT_KEY,
-  proxify,
-  convert,
-  transact,
-  bind,
-} from './utils'
+import { YOBJECT_KEY, proxify, convert, transact } from './utils'
 
 // proxy cache
 const arrays = new WeakMap<Y.Array<any>>()
@@ -32,48 +25,6 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
   // return cached proxy if available
   if (arrays.has(arr)) return arrays.get(arr)
 
-  const bindings = new Map<number | null, Binding>()
-
-  function listener(event: Y.YArrayEvent<any>) {
-    const start = event.delta[0]?.retain || 0
-    const length = event.target.length
-
-    for (const [key, binding] of bindings) {
-      if (key === null) {
-        if (event.changes.added.size !== event.changes.deleted.size) {
-          binding.trigger()
-        }
-      } else if (typeof key === 'number') {
-        if (key >= start) {
-          binding.trigger()
-        }
-
-        if (key >= length) {
-          bindings.delete(key)
-        }
-      }
-    }
-
-    if (!bindings.size) {
-      arr.unobserve(listener)
-    }
-  }
-
-  function observe(key: number | null = null) {
-    if (!bindings.size) {
-      arr.observe(listener)
-    }
-
-    let binding = bindings.get(key)
-
-    if (!binding) {
-      binding = bind()
-      bindings.set(key, binding)
-    }
-
-    binding.track()
-  }
-
   // create new proxy
   const proxy = new Proxy([] as T[], {
     get(target, prop, receiver) {
@@ -87,19 +38,11 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
         return Reflect.get(target, key)
       }
 
-      if (prop === '__v_skip') {
-        return true
-      }
-
       if (typeof key === 'number') {
-        observe(key)
-
         return proxify(arr.get(key))
       }
 
       if (key === 'length') {
-        observe()
-
         return arr.length
       }
 
@@ -173,13 +116,16 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
         }
       }
 
-      // wrap any other functions that perform multiple updates in a transaction
+      // TODO: implement these methods separately, reverse is broken and copyWithin, fill and sort might need some extra conversion / convert logic
       if (
         key === 'copyWithin' ||
         key === 'fill' ||
         key === 'reverse' ||
         key === 'sort'
       ) {
+        // throw new Error(`"${key}" is not supported`)
+
+        // const method = target[key] as any
         const method = Reflect.get(target, prop)
 
         return function () {
@@ -231,16 +177,8 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
       return Reflect.set(target, prop, value, receiver)
     },
 
-    deleteProperty(target, prop) {
-      const key = toKey(prop)
-
-      if (typeof key === 'symbol' || typeof key === 'string') {
-        return Reflect.deleteProperty(target, prop)
-      }
-
-      arr.delete(key, 1)
-
-      return true
+    deleteProperty(_target, _prop) {
+      throw new Error('Delete operation on arrays is not supported.')
     },
 
     getOwnPropertyDescriptor(_target, prop) {
@@ -266,14 +204,10 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
     },
 
     ownKeys(_target) {
-      observe()
-
       const keys: string[] = []
-
       for (let i = 0; i < arr.length; i++) {
         keys.push(`${i}`)
       }
-
       keys.push('length')
 
       return keys

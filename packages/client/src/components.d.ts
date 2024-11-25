@@ -22,6 +22,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     Slider: typeof import('primevue/slider')['default']
     ToolbarNode: typeof import('./components/ToolbarNode.vue')['default']
+    TreeTable: typeof import('primevue/treetable')['default']
     ZoneDiagram: typeof import('./components/zone-diagram/ZoneDiagram.vue')['default']
     ZoneDiagramNode: typeof import('./components/zone-diagram/ZoneDiagramNode.vue')['default']
     Zwutton: typeof import('./components/Zwutton.vue')['default']

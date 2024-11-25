@@ -1,5 +1,5 @@
 import * as Y from 'yjs'
-import { YOBJECT_KEY, proxify, convert } from './utils'
+import { type Binding, YOBJECT_KEY, proxify, convert, bind } from './utils'
 
 // proxy cache
 const objects = new WeakMap<Y.Map<any>>()
@@ -14,6 +14,52 @@ export default function object<
   // return cached proxy if available
   if (objects.has(map)) return objects.get(map)
 
+  const bindings = new Map<string | null, Binding>()
+
+  function listener(event: Y.YMapEvent<any>) {
+    const added: string[] = []
+    const updated: string[] = []
+    const deleted: string[] = []
+
+    event.changes.keys.forEach((change, key) => {
+      if (change.action === 'add') added.push(key)
+      if (change.action === 'update') {
+        if (change.oldValue !== event.target.get(key)) {
+          updated.push(key)
+        }
+      }
+      if (change.action === 'delete') deleted.push(key)
+    })
+
+    if (added.length || deleted.length) {
+      bindings.get(null)?.trigger()
+    }
+
+    updated.forEach((key) => {
+      bindings.get(key)?.trigger()
+    })
+
+    deleted.forEach((key) => bindings.delete(key))
+    if (!bindings.size) {
+      map.unobserve(listener)
+    }
+  }
+
+  function observe(key: null | string = null) {
+    if (!bindings.size) {
+      map.observe(listener)
+    }
+
+    let binding = bindings.get(key)
+
+    if (!binding) {
+      binding = bind()
+      bindings.set(key, binding)
+    }
+
+    binding.track()
+  }
+
   // create new proxy
   const proxy = new Proxy({} as T, {
     get(target, prop) {
@@ -24,6 +70,12 @@ export default function object<
       if (typeof prop === 'symbol') {
         return Reflect.get(target, prop)
       }
+
+      if (prop === '__v_skip') {
+        return true
+      }
+
+      observe(prop)
 
       return proxify(map.get(prop))
     },
@@ -44,6 +96,8 @@ export default function object<
     has(_target, prop) {
       if (typeof prop !== 'string') return false
 
+      observe()
+
       return map.has(prop)
     },
     getOwnPropertyDescriptor(_target, prop) {
@@ -55,6 +109,8 @@ export default function object<
       }
     },
     ownKeys(_target) {
+      observe()
+
       return Array.from(map.keys())
     },
   })

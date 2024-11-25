@@ -2,15 +2,15 @@ import * as Y from 'yjs'
 import object from './object'
 import array from './array'
 import { YOBJECT_KEY, proxify } from './utils'
-import { reactive, Reactive } from 'vue'
 
-export { YOBJECT_KEY, transact } from './utils'
+export { inspect, transact } from './utils'
 
 export default function useDocument<
   T extends Record<string, any[] | Record<any, any>>,
->(init: T): Reactive<T> {
+>(init: T) {
   const doc = new Y.Doc()
 
+  // initialize with provided values
   for (const [key, value] of Object.entries(init)) {
     if (Array.isArray(value)) {
       array(value, doc.getArray(key))
@@ -27,6 +27,10 @@ export default function useDocument<
 
       if (typeof prop === 'symbol') {
         return Reflect.get(target, prop)
+      }
+
+      if (prop === '__v_skip') {
+        return true
       }
 
       if (typeof prop !== 'string' || !doc.share.has(prop))
@@ -62,5 +66,5 @@ export default function useDocument<
     },
   })
 
-  return reactive(proxy)
+  return proxy
 }
