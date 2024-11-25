@@ -26,7 +26,6 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
   if (arrays.has(arr)) return arrays.get(arr)
 
   const track = bind(arr, (event: Y.YArrayEvent<any>, trigger, untrack) => {
-    console.log(event.changes)
     const start = event.delta[0]?.retain || 0
     const length = event.target.length
 
