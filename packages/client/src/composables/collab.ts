@@ -1,6 +1,7 @@
 import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket'
-import { ref, toRaw } from 'vue'
+import { Awareness } from 'y-protocols/awareness'
+import { onBeforeUnmount, ref, toRaw } from 'vue'
 
 type User = { email: string; owner?: boolean }
 
@@ -11,7 +12,15 @@ export default function useCollab(
   channel: string,
   options?: { user?: User },
 ) {
-  const provider = new WebsocketProvider('ws://localhost:1337', channel, doc)
+  const awareness = new Awareness(doc)
+  const provider = new WebsocketProvider('ws://localhost:1337', channel, doc, {
+    awareness,
+    params: { client: `${awareness.clientID}` },
+  })
+
+  doc.on('update', (update, origin, doc, tr) => {
+    console.log(update, origin, doc, tr)
+  })
 
   provider.on('status', (event: { status: 'connected' | 'disconnected' }) => {
     if (event.status === 'connected') {
@@ -21,15 +30,14 @@ export default function useCollab(
     }
   })
 
-  const awareness = provider.awareness
+  provider.on('sync', (event: boolean) => {
+    console.log('[Collab][Sync]', event)
+  })
 
   const session = ref<Session>([])
 
   awareness.on('change', () => {
-    console.log(awareness.getStates())
     session.value = Array.from(awareness.getStates().values()) as Session
-    console.log('[Collab][Session]', toRaw(session.value))
-    console.log(awareness)
   })
 
   if (options?.user) {
@@ -37,9 +45,9 @@ export default function useCollab(
     awareness.setLocalStateField('focus', null)
   }
 
-  window.addEventListener('beforeunload', () => {
-    provider.awareness.destroy()
-  })
+  // window.addEventListener('beforeunload', () => {
+  //   provider.awareness.destroy()
+  // })
 
-  return { provider, session }
+  return { provider, awareness, session }
 }
