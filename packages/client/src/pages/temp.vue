@@ -28,11 +28,11 @@ const { state, doc } = useDocument({
     woot: undefined,
   },
   temp: {
-    arr: ['a', 'b', 'c', 'd', 'e'],
+    arr: ['a'],
   },
 })
 
-const { session } = useCollab(doc, 'Course-1', { user })
+const { session, awareness, provider } = useCollab(doc, 'Course-1', { user })
 
 function update() {
   state.course.title = 'Yaaaaaargh'
