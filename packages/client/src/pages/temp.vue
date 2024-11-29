@@ -1,44 +1,52 @@
 <template>
-  <Button @click="update">Update</Button>
-  <Button @click="temp">Temp</Button>
-  <pre>{{ doc }}</pre>
+  <div class="p-4">
+    <Button @click="update">Update</Button>
+    <Button @click="temp">Temp</Button>
+    <div class="flex gap-4">
+      <pre>{{ state }}</pre>
+      <pre>{{ session }}</pre>
+    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import useDocument, { inspect, transact } from '@/composables/document'
-import * as Y from 'yjs'
+import _ from 'lodash'
+import useDocument, { transact } from '@/composables/document'
+import useCollab from '@/composables/collab'
 
 defineProps<{}>()
 
-const doc = useDocument({
+const user = {
+  email: 'rcq.snel@gmail.com',
+}
+
+const { state, doc } = useDocument({
   course: {
     __typename: 'Course',
     id: 'Course-1',
     title: 'Course 1',
     woot: undefined,
   },
-  arr: ['a', 'b', 'c', 'd', 'e'],
+  temp: {
+    arr: ['a', 'b', 'c', 'd', 'e'],
+  },
 })
 
+const { session } = useCollab(doc, 'Course-1', { user })
+
 function update() {
-  doc.course.title = 'Yaaaaaargh'
+  state.course.title = 'Yaaaaaargh'
+  state.temp.arr = ['a', 'b', 'c', 'd', 'e']
 }
 
 function temp() {
-  transact(doc.arr, () => {
-    doc.arr.push('f', 'g')
-    // doc.arr.splice(1, 2, 'x')
-    // doc.arr.unshift('x')
-    // doc.arr.reverse()
+  transact(state.temp.arr, () => {
+    // state.temp.arr.push('f', 'g')
+    // state.temp.arr.splice(1, 2, 'x')
+    state.temp.arr.unshift('x')
+    state.temp.arr.reverse()
   })
 
-  const d = new Y.Doc()
-  const a = d.getArray('arr')
-
-  a.insert(0, [1, 2, null, 3])
-
-  console.log(a.toJSON())
-
-  // console.log(inspect(doc.arr)?.toJSON())
+  // console.log(inspect(state.temp.arr)?.toJSON())
 }
 </script>

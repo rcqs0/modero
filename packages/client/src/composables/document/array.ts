@@ -33,7 +33,20 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
       trigger()
     }
 
-    for (let key = 0; key < length; key++) {
+    let end = 1
+
+    for (const segment of event.delta) {
+      if (segment.insert) {
+        end += (segment.insert as any[]).length
+      } else if (segment.delete) {
+        end -= segment.delete
+      } else if (segment.retain) {
+        end += segment.retain
+      }
+    }
+
+    // TODO: optimize further to remove more unnecessary triggers
+    for (let key = 0; key < end; key++) {
       if (key >= start) {
         trigger(key)
       }

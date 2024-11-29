@@ -4,7 +4,7 @@ import type { AppRouter } from '../../server/src'
 const client = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
-      url: 'api',
+      url: 'api/trpc',
       // You can pass any HTTP headers you wish here
       async headers() {
         return {
