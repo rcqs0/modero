@@ -62,6 +62,17 @@ export default function useDocument<
   } else {
     state.value = document(init)
     synced.value = true
+
+    if (options?.context) {
+      // TODO: comibine watchers
+      watch(
+        () => unref(options.context),
+        (context) => {
+          session.value = [context!]
+        },
+        { immediate: true, deep: true },
+      )
+    }
   }
 
   onBeforeUnmount(() => {
