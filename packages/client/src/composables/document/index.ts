@@ -1,4 +1,4 @@
-import { onBeforeUnmount, ref, shallowRef } from 'vue'
+import { onBeforeUnmount, Ref, ref, shallowRef, unref, watch } from 'vue'
 import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket'
 import { Awareness } from 'y-protocols/awareness'
@@ -9,7 +9,7 @@ export { inspect, transact } from './utils'
 export default function useDocument<
   T extends Record<string, any[] | Record<any, any>>,
   C extends Record<string, any>,
->(init: T, options?: { channel?: string; context?: C }) {
+>(init: T, options?: { channel?: string; context?: C | Ref<C> }) {
   const state = shallowRef<T>()
   const synced = ref(false)
   const error = ref<string | null>(null)
@@ -19,7 +19,7 @@ export default function useDocument<
   let provider: WebsocketProvider | null = null
   let awareness: Awareness | null = null
 
-  const session = ref<C[]>(options?.context ? [options.context] : [])
+  const session = ref<C[]>([])
 
   if (options?.channel) {
     awareness = new Awareness(doc)
@@ -49,9 +49,15 @@ export default function useDocument<
     })
 
     if (options?.context) {
-      for (const [key, value] of Object.entries(options.context)) {
-        awareness.setLocalStateField(key, value)
-      }
+      watch(
+        () => unref(options.context),
+        (context) => {
+          for (const [key, value] of Object.entries(context!)) {
+            awareness!.setLocalStateField(key, value)
+          }
+        },
+        { immediate: true, deep: true },
+      )
     }
   } else {
     state.value = document(init)

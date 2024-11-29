@@ -12,12 +12,15 @@
 <script lang="ts" setup>
 import _ from 'lodash'
 import useDocument, { transact } from '@/composables/document'
+import { ref } from 'vue'
 
 defineProps<{}>()
 
-const user = {
-  email: 'rcq.snel@gmail.com',
-}
+const context = ref({
+  user: {
+    email: 'rcq.snel@gmail.com',
+  },
+})
 
 const { state, session } = useDocument(
   {
@@ -31,7 +34,7 @@ const { state, session } = useDocument(
       arr: ['a', 'b', 'c'],
     },
   },
-  { channel: 'Course-1', context: { user } },
+  { channel: 'Course-1', context },
 )
 
 function update() {
@@ -40,6 +43,7 @@ function update() {
 }
 
 function temp() {
+  context.value.user.email = 'qweoioi@qwoeioqjd.com'
   transact(state.value!.temp.arr, () => {
     // state.value!.temp.arr.push('f', 'g')
     // state.value!.temp.arr.splice(1, 2, 'x')
