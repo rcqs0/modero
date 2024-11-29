@@ -18,7 +18,7 @@ function toKey(prop: string | number | symbol) {
 }
 
 export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
-  if (init.length && arr.length) {
+  if (init.length && arr.doc && arr.length) {
     throw new Error("Can't provide initial values for a non-empty array.")
   }
 

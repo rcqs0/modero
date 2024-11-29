@@ -44,7 +44,7 @@ export function connect(ws: WebSocket, req: IncomingMessage) {
     const awareness = new Awareness(doc)
     awareness.setLocalState(null)
 
-    doc.on('update', (update, _origin, doc, _tr) => {
+    doc.on('update', (update, _origin, _doc, _tr) => {
       const encoder = encoding.createEncoder()
       encoding.writeVarUint(encoder, Y_SYNC_MESSAGE_CODE)
       writeUpdate(encoder, update)
@@ -78,6 +78,8 @@ export function connect(ws: WebSocket, req: IncomingMessage) {
     room = { doc, connections, awareness }
     rooms.set(channel, room)
   }
+
+  room.connections.set(ws, new Set())
 
   ws.on('message', (message) => {
     const decoder = decoding.createDecoder(
