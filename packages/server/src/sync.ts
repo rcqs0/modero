@@ -59,7 +59,6 @@ export function connect(ws: WebSocket, req: IncomingMessage) {
 
       const message = encoding.toUint8Array(encoder)
       connections.forEach((_, ws) => ws.send(message))
-      console.log(Array.from(connections.keys()).indexOf(_origin), doc.toJSON())
     })
 
     awareness.on(
@@ -80,8 +79,6 @@ export function connect(ws: WebSocket, req: IncomingMessage) {
   }
 
   room.connections.set(ws, client)
-
-  console.log({ channel, connections: room.connections.size })
 
   ws.on('message', (message) => {
     const decoder = decoding.createDecoder(
@@ -122,8 +119,6 @@ export function connect(ws: WebSocket, req: IncomingMessage) {
       room.awareness.destroy()
       rooms.delete(channel)
     }
-
-    console.log({ channel, connections: room.connections.size })
   })
 
   // initial sync

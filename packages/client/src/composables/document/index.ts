@@ -34,7 +34,7 @@ export default function useDocument<
 
     provider.on('sync', (event: boolean) => {
       if (event) {
-        state.value = document(doc.share.size ? shape(init) : init, doc)
+        state.value = document(init, doc)
       }
     })
 

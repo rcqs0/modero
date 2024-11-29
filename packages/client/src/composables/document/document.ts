@@ -11,9 +11,17 @@ export default function document<
   // initialize with provided values
   for (const [key, value] of Object.entries(init)) {
     if (Array.isArray(value)) {
-      array(value, doc.getArray(key))
+      if (doc.share.has(key)) {
+        doc.getArray(key)
+      } else {
+        array(value, doc.getArray(key))
+      }
     } else {
-      object(value, doc.getMap(key))
+      if (doc.share.has(key)) {
+        doc.getMap(key)
+      } else {
+        object(value, doc.getMap(key))
+      }
     }
   }
 
