@@ -7,9 +7,6 @@ import { Entities } from './utils'
 
 export { inspect, transact } from './utils'
 
-type User = { email: string; owner?: boolean }
-type Session = { user: User; focus: any }[]
-
 export default function useDocument<
   T extends Record<string, any[] | Record<any, any>>,
   C extends Record<string, any>,

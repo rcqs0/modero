@@ -31,7 +31,7 @@ const { state, session } = useDocument(
       arr: ['a', 'b', 'c'],
     },
   },
-  { channel: 'Course-1', user },
+  { channel: 'Course-1', context: { user } },
 )
 
 function update() {
