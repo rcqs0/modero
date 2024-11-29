@@ -59,10 +59,7 @@ export function connect(ws: WebSocket, req: IncomingMessage) {
 
       const message = encoding.toUint8Array(encoder)
       connections.forEach((_, ws) => ws.send(message))
-      console.log(
-        Array.from(connections.keys()).indexOf(_origin),
-        doc.getMap('temp').toJSON(),
-      )
+      console.log(Array.from(connections.keys()).indexOf(_origin), doc.toJSON())
     })
 
     awareness.on(

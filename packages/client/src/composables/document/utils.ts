@@ -13,6 +13,19 @@ export function inspect(value: any) {
   }
 }
 
+// create a blank initialization shape from any valid document state
+export function shape<T extends Record<string, any[] | Record<any, any>>>(
+  init: T,
+) {
+  const mapped: Record<string, [] | {}> = {}
+
+  for (const [key, value] of Object.entries(init)) {
+    mapped[key] = Array.isArray(value) ? [] : {}
+  }
+
+  return mapped as T
+}
+
 // resolve a value into a proxy, if available
 export function proxify(value: any) {
   if (value instanceof Y.Array) {
