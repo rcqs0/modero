@@ -6,18 +6,20 @@ import document from './document'
 
 export { inspect, transact } from './utils'
 
-type User = { email: string; owner?: boolean }
-type Session = { user: User; focus: any }[]
-
 export default function useDocument<
   T extends Record<string, any[] | Record<any, any>>,
->(init: T, options?: { channel?: string; user?: User }) {
+  C extends Record<string, any>,
+>(init: T, options?: { channel?: string; context?: C }) {
   const state = shallowRef<T>()
+  const synced = ref(false)
+  const error = ref<string | null>(null)
+
   const doc = new Y.Doc()
 
   let provider: WebsocketProvider | null = null
   let awareness: Awareness | null = null
-  const session = ref<Session>([])
+
+  const session = ref<C[]>(options?.context ? [options.context] : [])
 
   if (options?.channel) {
     awareness = new Awareness(doc)
@@ -34,18 +36,26 @@ export default function useDocument<
     provider.on('sync', (event: boolean) => {
       if (event) {
         state.value = document(init, doc)
+        synced.value = true
       }
     })
 
-    awareness.on('change', () => {
-      session.value = Array.from(awareness!.getStates().values()) as Session
+    provider.on('connection-error', () => {
+      error.value = 'Could not connect to remote document.'
     })
 
-    if (options?.user) {
-      awareness.setLocalStateField('user', options.user)
+    awareness.on('change', () => {
+      session.value = Array.from(awareness!.getStates().values()) as C[]
+    })
+
+    if (options?.context) {
+      for (const [key, value] of Object.entries(options.context)) {
+        awareness.setLocalStateField(key, value)
+      }
     }
   } else {
     state.value = document(init)
+    synced.value = true
   }
 
   onBeforeUnmount(() => {
