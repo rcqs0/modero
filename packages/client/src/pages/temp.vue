@@ -12,7 +12,6 @@
 <script lang="ts" setup>
 import _ from 'lodash'
 import useDocument, { transact } from '@/composables/document'
-import useCollab from '@/composables/collab'
 
 defineProps<{}>()
 
@@ -20,23 +19,24 @@ const user = {
   email: 'rcq.snel@gmail.com',
 }
 
-const { state, doc } = useDocument({
-  course: {
-    __typename: 'Course',
-    id: 'Course-1',
-    title: 'Course 1',
-    woot: undefined,
+const { state, session } = useDocument(
+  {
+    course: {
+      __typename: 'Course',
+      id: 'Course-1',
+      title: 'Course 1',
+      woot: undefined,
+    },
+    temp: {
+      arr: ['a', 'b', 'c'],
+    },
   },
-  temp: {
-    arr: ['a'],
-  },
-})
-
-const { session, awareness, provider } = useCollab(doc, 'Course-1', { user })
+  { channel: 'Course-1', user },
+)
 
 function update() {
   state.course.title = 'Yaaaaaargh'
-  state.temp.arr = ['a', 'b', 'c', 'd', 'e']
+  state.temp.arr = ['a', 'b', 'd', 'e', 'f']
 }
 
 function temp() {
