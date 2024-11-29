@@ -7,21 +7,13 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    BlockUI: typeof import('primevue/blockui')['default']
     Button: typeof import('primevue/button')['default']
     Column: typeof import('primevue/column')['default']
     DataTable: typeof import('primevue/datatable')['default']
     DatePicker: typeof import('primevue/datepicker')['default']
-    DiagramNode: typeof import('./components/DiagramNode.vue')['default']
-    IconField: typeof import('primevue/iconfield')['default']
-    InputIcon: typeof import('primevue/inputicon')['default']
     InputText: typeof import('primevue/inputtext')['default']
-    Panel: typeof import('primevue/panel')['default']
-    Rating: typeof import('primevue/rating')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    Slider: typeof import('primevue/slider')['default']
-    ToolbarNode: typeof import('./components/ToolbarNode.vue')['default']
     TreeTable: typeof import('primevue/treetable')['default']
     ZoneDiagram: typeof import('./components/zone-diagram/ZoneDiagram.vue')['default']
     ZoneDiagramNode: typeof import('./components/zone-diagram/ZoneDiagramNode.vue')['default']

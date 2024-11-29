@@ -9,10 +9,9 @@ import { connect } from './sync'
 
 const prisma = new PrismaClient()
 
-const createContext = ({
-  req,
-  res,
-}: trpcExpress.CreateExpressContextOptions) => ({}) // no context
+const createContext = (
+  _options: trpcExpress.CreateExpressContextOptions,
+) => ({}) // no context
 type Context = Awaited<ReturnType<typeof createContext>>
 
 const t = initTRPC.context<Context>().create()

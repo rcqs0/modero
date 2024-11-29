@@ -12,10 +12,6 @@ const router = createRouter({
       component: () => import('./pages/repo.vue'),
     },
     {
-      path: '/document',
-      component: () => import('./pages/document.vue'),
-    },
-    {
       path: '/diagram',
       component: () => import('./pages/diagram.vue'),
     },

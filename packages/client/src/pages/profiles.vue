@@ -9,7 +9,7 @@
     >
       <Column field="title" header="Title" expander class="w-1/2" />
       <Column field="profileQuery" header="Profile Query">
-        <template #body="{ column, node }">
+        <template #body="{ node }">
           {{ node.data.profileQuery }}
         </template>
       </Column>

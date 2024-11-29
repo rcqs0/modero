@@ -11,7 +11,7 @@
 <script lang="ts">
 import _ from 'lodash'
 import { defineComponent } from 'vue'
-import useRepo, { inspect } from '@/composables/repo'
+import useRepo from '@/composables/repo'
 
 const DATA = {
   __typename: 'Course',
@@ -51,7 +51,7 @@ const DATA = {
 
 export default defineComponent({
   setup() {
-    const repo = useRepo(DATA)
+    const repo = useRepo(DATA as any)
 
     const course = repo.resolve({
       __typename: 'Course',
@@ -74,12 +74,12 @@ export default defineComponent({
       })
     }
 
-    console.log(
-      inspect(course.sections[0].pages[0]).target ===
-        inspect(course.sections[1].pages[0]).target,
-      inspect(course.sections[1].pages[0]),
-      inspect(page),
-    )
+    // console.log(
+    //   inspect(course.sections[0].pages[0]).target ===
+    //     inspect(course.sections[1].pages[0]).target,
+    //   inspect(course.sections[1].pages[0]),
+    //   inspect(page),
+    // )
 
     return { course, page, update }
   },
