@@ -35,18 +35,18 @@ const { state, session } = useDocument(
 )
 
 function update() {
-  state.course.title = 'Yaaaaaargh'
-  state.temp.arr = ['a', 'b', 'd', 'e', 'f']
+  state.value!.course.title = 'Yaaaaaargh'
+  state.value!.temp.arr = ['a', 'b', 'd', 'e', 'f']
 }
 
 function temp() {
-  transact(state.temp.arr, () => {
-    // state.temp.arr.push('f', 'g')
-    // state.temp.arr.splice(1, 2, 'x')
-    state.temp.arr.unshift('x')
-    state.temp.arr.reverse()
+  transact(state.value!.temp.arr, () => {
+    // state.value!.temp.arr.push('f', 'g')
+    // state.value!.temp.arr.splice(1, 2, 'x')
+    state.value!.temp.arr.unshift('x')
+    state.value!.temp.arr.reverse()
   })
 
-  // console.log(inspect(state.temp.arr)?.toJSON())
+  // console.log(inspect(state.value!.temp.arr)?.toJSON())
 }
 </script>
