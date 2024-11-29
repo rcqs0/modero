@@ -1,99 +1,123 @@
 import _ from 'lodash'
-import { DeepPartial } from '@/lib/types'
-import { reactive } from 'vue'
+import { ref, toRaw } from 'vue'
 
-// const proxies = new WeakMap()
-
-const META_KEY = Symbol('meta')
-
-export function inspect(value: any) {
-  return typeof value !== 'object' ? undefined : value[META_KEY]
-}
-
-export function patch<T>(target: T, value: DeepPartial<T>): void {
-  _.mergeWith(target, value, (_value, other) => {
-    // don't try to merge array values - replace instead
-    if (Array.isArray(other)) return other
-  })
-}
+type Entities = Record<string, Record<string, any>>
 
 export function normalize(
   input: any,
-  entities: Record<string, Record<string, any>> = {},
+  entities: Entities = {},
 ): {
   data: any
-  entities: Record<string, Record<string, any>>
+  entities: Entities
 } {
   if (!input || typeof input !== 'object') return { data: input, entities }
 
-  _.each(input, (value, key) => {
-    input[key] = normalize(value, entities).data
+  const data = _.clone(input)
+
+  _.each(data, (value, key) => {
+    data[key] = normalize(value, entities).data
   })
 
-  if ('id' in input && '__typename' in input) {
-    const type = input.__typename
-
-    const reference = _.pick(input, ['__typename', 'id'])
+  if ('__typename' in data && 'id' in data) {
+    const { __typename: type, id } = data
+    const reference = { __typename: type, id }
 
     if (!entities[type]) entities[type] = {}
-    patch(entities[type], { [input.id]: input })
+
+    if (!entities[type][id]) {
+      entities[type][id] = data
+    } else {
+      const instance = entities[type][id]
+
+      for (const [key, value] of Object.entries(data)) {
+        if (!_.isEqual(instance[key], value)) {
+          instance[key] = value
+        }
+      }
+    }
 
     return { data: reference, entities }
   }
 
-  return { data: input, entities }
+  return { data, entities }
 }
 
-export function denormalize(
-  input: any,
-  entities: Record<string, Record<string, any>>,
-  path: string[] = [],
-): any {
+function denormalize(input: any, entities: Entities): any {
   if (!input || typeof input !== 'object') return input
 
-  const normalized = entities[input.__typename]?.[input.id]
-  const object = normalized || input
+  const instance = entities[input.__typename]?.[input.id]
+  const object = instance || input
 
-  const proxy = new Proxy(object, {
+  return new Proxy(object, {
     get(target, prop, receiver) {
-      if (prop === META_KEY) {
-        return {
-          target: object,
-          normalized: !!normalized,
-          path,
-        }
-      }
-
       if (typeof prop === 'symbol') {
         return Reflect.get(target, prop)
       }
 
       if (prop === '__v_raw') {
-        return _.cloneDeep(receiver)
+        return toRaw(object)
       }
 
-      return denormalize(target[prop], entities, [...path, prop])
+      if (Array.isArray(target)) {
+        const method = Reflect.get(target, prop)
+
+        if (typeof method === 'function') {
+          return function () {
+            return method.apply(
+              receiver,
+              normalize(Array.from(arguments), entities).data,
+            )
+          }
+        }
+      }
+
+      return denormalize(target[prop], entities)
     },
-    set(target, prop, value) {
+
+    set(target, prop, value, _receiver) {
       if (typeof prop === 'symbol') {
         return Reflect.set(target, prop, value)
       }
 
-      target[prop] = normalize(value, entities).data
+      const normalized = normalize(value, entities)
+
+      if (!_.isEqual(target[prop], normalized.data)) {
+        Reflect.set(target, prop, normalized.data)
+      }
+
+      return true
+    },
+
+    deleteProperty(target, prop) {
+      if (prop in target) {
+        delete target[prop]
+      }
 
       return true
     },
   })
-
-  return proxy
 }
 
-export default function useRepo(input: any) {
-  const entities = reactive(normalize(input).entities)
+export default function useRepo(input: Entities = {}) {
+  const entities = ref<Entities>(input)
 
   function resolve(input: any) {
-    return denormalize(input, entities)
+    return denormalize(input, entities.value)
   }
 
-  return { resolve }
+  function get(entity: string, id: string) {
+    return resolve(entities.value[entity]?.[id])
+  }
+
+  function update(input: any) {
+    const { data } = normalize(input, entities.value)
+
+    return resolve(data)
+  }
+
+  function initialize(input: Entities) {
+    entities.value = input
+  }
+
+  return { entities, resolve, get, update, initialize }
 }
