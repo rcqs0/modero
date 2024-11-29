@@ -3,7 +3,6 @@ import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket'
 import { Awareness } from 'y-protocols/awareness'
 import document from './document'
-import { shape } from './utils'
 
 export { inspect, transact } from './utils'
 
