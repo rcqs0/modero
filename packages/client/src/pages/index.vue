@@ -33,6 +33,6 @@ import controls from '@/lib/content/controls'
 import useDocument from '@/composables/document'
 
 const { state } = useDocument({
-  controls: [{ a: 123 }],
+  controls: controls(),
 })
 </script>
