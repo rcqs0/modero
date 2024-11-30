@@ -1,4 +1,4 @@
-import { onBeforeUnmount, Ref, ref, shallowRef, unref, watch } from 'vue'
+import { onBeforeUnmount, Ref, ref, shallowRef, watch } from 'vue'
 import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket'
 import { Awareness } from 'y-protocols/awareness'
@@ -9,9 +9,10 @@ export { inspect, transact } from './utils'
 export default function useDocument<
   T extends Record<string, any[] | Record<any, any>>,
   C extends Record<string, any>,
->(init: T, options?: { channel?: string; context?: C | Ref<C> }) {
+>(init: T, options?: { channel?: string; session?: Ref<C> }) {
   const state = shallowRef<T>()
   const synced = ref(false)
+  const initialized = ref(false)
   const error = ref<string | null>(null)
 
   const doc = new Y.Doc()
@@ -19,7 +20,7 @@ export default function useDocument<
   let provider: WebsocketProvider | null = null
   let awareness: Awareness | null = null
 
-  const session = ref<C[]>([])
+  const collaborators = ref<C[]>([])
 
   if (options?.channel) {
     awareness = new Awareness(doc)
@@ -37,6 +38,7 @@ export default function useDocument<
       if (event) {
         state.value = document(init, doc)
         synced.value = true
+        initialized.value = true
       }
     })
 
@@ -45,45 +47,36 @@ export default function useDocument<
     })
 
     awareness.on('change', () => {
-      session.value = Array.from(awareness!.getStates().values()) as C[]
+      collaborators.value = Array.from(awareness!.getStates().values()) as C[]
     })
-
-    if (options?.context) {
-      watch(
-        () => unref(options.context),
-        (context) => {
-          for (const [key, value] of Object.entries(context!)) {
-            awareness!.setLocalStateField(key, value)
-          }
-        },
-        { immediate: true, deep: true },
-      )
-    }
   } else {
     state.value = document(init)
-    synced.value = true
+    initialized.value = true
+  }
 
-    if (options?.context) {
-      // TODO: comibine watchers
-      watch(
-        () => unref(options.context),
-        (context) => {
-          session.value = [context!]
-        },
-        { immediate: true, deep: true },
-      )
-    }
+  if (options?.session) {
+    watch(
+      options.session,
+      (session) => {
+        if (awareness) {
+          for (const [key, value] of Object.entries(session)) {
+            awareness!.setLocalStateField(key, value)
+          }
+        } else {
+          collaborators.value = [session]
+        }
+      },
+      { immediate: true, deep: true },
+    )
   }
 
   onBeforeUnmount(() => {
-    if (provider) {
-      provider.destroy()
-      awareness?.destroy()
+    provider?.destroy()
+    provider = null
 
-      provider = null
-      awareness = null
-    }
+    awareness?.destroy()
+    awareness = null
   })
 
-  return { state, doc, provider, awareness, session }
+  return { state, doc, initialized, synced, provider, awareness, collaborators }
 }

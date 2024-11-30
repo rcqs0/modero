@@ -4,7 +4,7 @@
     <Button @click="temp">Temp</Button>
     <div class="flex gap-4">
       <pre>{{ state }}</pre>
-      <pre>{{ session }}</pre>
+      <pre>{{ collaborators }}</pre>
     </div>
   </div>
 </template>
@@ -16,13 +16,13 @@ import { ref } from 'vue'
 
 defineProps<{}>()
 
-const context = ref({
+const session = ref({
   user: {
     email: 'rcq.snel@gmail.com',
   },
 })
 
-const { state, session } = useDocument(
+const { state, collaborators } = useDocument(
   {
     course: {
       __typename: 'Course',
@@ -34,7 +34,7 @@ const { state, session } = useDocument(
       arr: ['a', 'b', 'c'],
     },
   },
-  { channel: 'Course-1', context },
+  { channel: 'Course-1', session },
 )
 
 function update() {
@@ -43,7 +43,7 @@ function update() {
 }
 
 function temp() {
-  context.value.user.email = 'qweoioi@qwoeioqjd.com'
+  session.value.user.email = 'qweoioi@qwoeioqjd.com'
   transact(state.value!.temp.arr, () => {
     // state.value!.temp.arr.push('f', 'g')
     // state.value!.temp.arr.splice(1, 2, 'x')
