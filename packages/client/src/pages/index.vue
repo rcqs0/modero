@@ -26,6 +26,7 @@
         </template>
       </Column>
     </DataTable>
+    <InputText />
   </div>
 </template>
 
