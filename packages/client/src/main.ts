@@ -5,6 +5,8 @@ import './style.css'
 import main from './main.vue'
 import router from './router'
 
+import 'remixicon/fonts/remixicon.css'
+
 const app = createApp(main)
 const pinia = createPinia()
 

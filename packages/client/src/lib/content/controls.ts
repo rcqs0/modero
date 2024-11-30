@@ -4,6 +4,7 @@ export default () => [
     id: 'Control-0',
     title: 'Control 0',
     description: 'Control 0...',
+    type: 'preventive',
     effectiveness: 1,
   },
   {
@@ -11,6 +12,7 @@ export default () => [
     id: 'Control-1',
     title: 'Control 1',
     description: 'Control 1...',
+    type: 'preventive',
     effectiveness: 1,
   },
   {
@@ -18,6 +20,7 @@ export default () => [
     id: 'Control-2',
     title: 'Control 2',
     description: 'Control 2...',
+    type: 'preventive',
     effectiveness: 1,
   },
   {
@@ -25,6 +28,7 @@ export default () => [
     id: 'Control-3',
     title: 'Control 3',
     description: 'Control 3...',
+    type: 'preventive',
     effectiveness: 1,
   },
   {
@@ -32,6 +36,7 @@ export default () => [
     id: 'Control-4',
     title: 'Control 4',
     description: 'Control 4...',
+    type: 'preventive',
     effectiveness: 1,
   },
   {
@@ -39,6 +44,7 @@ export default () => [
     id: 'Control-5',
     title: 'Control 5',
     description: 'Control 5...',
+    type: 'preventive',
     effectiveness: 1,
   },
 ]

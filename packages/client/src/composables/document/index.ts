@@ -10,7 +10,7 @@ export default function useDocument<
   T extends Record<string, any[] | Record<any, any>>,
   C extends Record<string, any>,
 >(init: T, options?: { channel?: string; session?: Ref<C> }) {
-  const state = shallowRef<T>()
+  const state = shallowRef<T>({} as T)
   const synced = ref(false)
   const initialized = ref(false)
   const error = ref<string | null>(null)
