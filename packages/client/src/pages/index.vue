@@ -26,7 +26,6 @@
         </template>
       </Column>
     </DataTable>
-    <InputText />
   </div>
 </template>
 
@@ -48,9 +47,3 @@ function remove(id: string) {
   _.remove(document.state.controls, { id })
 }
 </script>
-
-<style lang="postcss" scoped>
-:deep(td[data-p-cell-editing='true']) {
-  @apply pt-0 pb-0;
-}
-</style>
