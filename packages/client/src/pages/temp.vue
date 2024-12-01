@@ -1,18 +1,32 @@
 <template>
   <div class="p-4">
     <Button @click="update">Update</Button>
-    <Button @click="temp">Temp</Button>
     <div class="flex gap-4">
-      <pre>{{ state }}</pre>
-      <pre>{{ collaborators }}</pre>
+      <pre>{{ document.state }}</pre>
+      <pre>{{ document.collaborators }}</pre>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import _ from 'lodash'
-import useDocument, { transact } from '@/composables/document'
+import useDocument, { inspect } from '@/composables/document'
+import { CACHE_KEY } from '@/composables/document/utils'
 import { ref } from 'vue'
+import * as Y from 'yjs'
+
+const doc = new Y.Doc()
+const pages = doc.getMap('pages')
+const a = new Y.Map()
+a.set('x', 1)
+pages.set('a', a)
+const b = new Y.Map()
+b.set('x', 2)
+pages.set('b', b)
+
+pages.set('a', b.clone())
+
+// console.log(pages.toJSON(), a)
 
 defineProps<{}>()
 
@@ -22,7 +36,7 @@ const session = ref({
   },
 })
 
-const { state, collaborators } = useDocument(
+const document = useDocument(
   {
     course: {
       __typename: 'Course',
@@ -30,27 +44,24 @@ const { state, collaborators } = useDocument(
       title: 'Course 1',
       woot: undefined,
     },
-    temp: {
-      arr: ['a', 'b', 'c'],
-    },
+    pages: { a: { x: 1 }, b: { x: 2 } },
+    arr: [1, 2, 3, 4, { a: 1 }],
   },
   { channel: 'Course-1', session },
 )
 
 function update() {
-  state.value!.course.title = 'Yaaaaaargh'
-  state.value!.temp.arr = ['a', 'b', 'd', 'e', 'f']
-}
+  const first = document.state.pages.a
+  document.state.pages.a = document.state.pages.b
+  document.state.pages.b = first
+  // console.log(inspect(first))
 
-function temp() {
-  session.value.user.email = 'qweoioi@qwoeioqjd.com'
-  transact(state.value!.temp.arr, () => {
-    // state.value!.temp.arr.push('f', 'g')
-    // state.value!.temp.arr.splice(1, 2, 'x')
-    state.value!.temp.arr.unshift('x')
-    state.value!.temp.arr.reverse()
-  })
+  // const pages = doc.get('pages')
+  // const a = pages.get('a')
+  // pages.set('b', a.clone())
 
-  // console.log(inspect(state.value!.temp.arr)?.toJSON())
+  // console.log(doc.get('pages').toJSON())
+
+  document.state.arr.reverse()
 }
 </script>

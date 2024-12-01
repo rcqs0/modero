@@ -1,4 +1,4 @@
-import { onBeforeUnmount, Ref, ref, shallowRef, watch } from 'vue'
+import { onBeforeUnmount, Ref, ref, shallowRef, watch, reactive } from 'vue'
 import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket'
 import { Awareness } from 'y-protocols/awareness'
@@ -78,5 +78,13 @@ export default function useDocument<
     awareness = null
   })
 
-  return { state, doc, initialized, synced, provider, awareness, collaborators }
+  return reactive({
+    state,
+    doc,
+    initialized,
+    synced,
+    provider,
+    awareness,
+    collaborators,
+  })
 }

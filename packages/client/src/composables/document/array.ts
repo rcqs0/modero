@@ -1,5 +1,13 @@
 import * as Y from 'yjs'
-import { YOBJECT_KEY, proxify, convert, transact, bind } from './utils'
+import {
+  YOBJECT_KEY,
+  CACHE_KEY,
+  proxify,
+  convert,
+  transact,
+  bind,
+  inspect,
+} from './utils'
 
 // proxy cache
 const arrays = new WeakMap<Y.Array<any>>()
@@ -18,9 +26,9 @@ function toKey(prop: string | number | symbol) {
 }
 
 export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
-  if (init.length && arr.doc && arr.length) {
-    throw new Error("Can't provide initial values for a non-empty array.")
-  }
+  // if (init.length && arr.doc && arr.length) {
+  //   throw new Error("Can't provide initial values for a non-empty array.")
+  // }
 
   // return cached proxy if available
   if (arrays.has(arr)) return arrays.get(arr)
@@ -60,6 +68,11 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
   // create new proxy
   const proxy = new Proxy([] as T[], {
     get(target, prop, receiver) {
+      const cached = Reflect.get(target, CACHE_KEY)
+      if (cached) {
+        return Reflect.get(cached, prop)
+      }
+
       const key = toKey(prop)
 
       if (key === YOBJECT_KEY) {
@@ -176,6 +189,11 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
     },
 
     has(target, prop) {
+      const cached = Reflect.get(target, CACHE_KEY)
+      if (cached) {
+        return Reflect.has(cached, prop)
+      }
+
       const key = toKey(prop)
 
       if (typeof key === 'number') {
@@ -186,6 +204,26 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
     },
 
     set(target, prop, value, receiver) {
+      const cached = Reflect.get(target, CACHE_KEY)
+      if (cached) {
+        return Reflect.set(cached, prop, value)
+      }
+
+      if (arr.doc) {
+        const current = receiver[prop]
+        const yobject = inspect(current)
+
+        if (yobject) {
+          current[CACHE_KEY] = yobject.toJSON()
+
+          if (yobject instanceof Y.Map) {
+            yobject.clear()
+          } else if (yobject instanceof Y.Array) {
+            yobject.delete(0, yobject.length)
+          }
+        }
+      }
+
       const key = toKey(prop)
 
       if (typeof key === 'symbol') {
@@ -193,9 +231,11 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
       }
 
       if (typeof key === 'number') {
+        const converted = convert(value)
+
         transact(arr, () => {
           arr.delete(key, 1)
-          arr.insert(key, [convert(value)])
+          arr.insert(key, [converted])
         })
 
         return true
@@ -215,6 +255,11 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
     },
 
     deleteProperty(target, prop) {
+      const cached = Reflect.get(target, CACHE_KEY)
+      if (cached) {
+        return Reflect.deleteProperty(cached, prop)
+      }
+
       const key = toKey(prop)
 
       if (typeof key === 'symbol' || typeof key === 'string') {
@@ -226,7 +271,12 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
       return true
     },
 
-    getOwnPropertyDescriptor(_target, prop) {
+    getOwnPropertyDescriptor(target, prop) {
+      const cached = Reflect.get(target, CACHE_KEY)
+      if (cached) {
+        return Reflect.getOwnPropertyDescriptor(cached, prop)
+      }
+
       const key = toKey(prop)
 
       if (key === 'length') {
@@ -248,7 +298,12 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
       }
     },
 
-    ownKeys(_target) {
+    ownKeys(target) {
+      const cached = Reflect.get(target, CACHE_KEY)
+      if (cached) {
+        return Reflect.ownKeys(cached)
+      }
+
       track()
 
       const keys: string[] = []

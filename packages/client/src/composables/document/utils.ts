@@ -6,6 +6,9 @@ import { shallowRef, triggerRef } from 'vue'
 // symbol key used to expose the inner yobject of a proxy
 export const YOBJECT_KEY = Symbol('yobject')
 
+// symbol key used to cache values destroyed instances
+export const CACHE_KEY = Symbol('cache')
+
 // inspect a value, returning it's related yobject if available
 export function inspect(value: any) {
   if (typeof value === 'object' && value) {
