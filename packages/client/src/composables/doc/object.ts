@@ -6,6 +6,7 @@ import {
   bind,
   normalize,
   denormalize,
+  transact,
 } from './utils'
 
 // proxy cache
@@ -68,8 +69,10 @@ export default function object<
         return Reflect.set(target, prop, value)
       }
 
-      const input = entities ? normalize(value, entities) : value
-      map.set(prop, convert(input, entities))
+      transact(map, () => {
+        const input = entities ? normalize(value, entities) : value
+        map.set(prop, convert(input, entities))
+      })
 
       return true
     },
