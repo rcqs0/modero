@@ -61,24 +61,17 @@ export function normalize(input: any, entities: Y.Map<any>) {
 }
 
 // resolve a value into a proxy, if available
-export function proxify(value: any, options?: { entities?: Y.Map<any> }) {
-  const entities = options?.entities
-
-  if (Array.isArray(value)) {
-    // TODO: array
-    return value
-  }
-
+export function proxify(value: any, entities?: Y.Map<any>) {
   if (value instanceof Y.Map) {
     if (entities && value.has('__typename') && value.has('id')) {
       const instance = entities
         .get(value.get('__typename'))
         ?.get(value.get('id'))
 
-      if (instance) return object({}, { type: instance, entities })
+      if (instance) return object({}, instance, entities)
     }
 
-    return object({}, { type: value, entities })
+    return object({}, value, entities)
   }
 
   if (
@@ -89,7 +82,7 @@ export function proxify(value: any, options?: { entities?: Y.Map<any> }) {
     if (entities && '__typename' in value && 'id' in value) {
       const instance = entities.get(value['__typename'])?.get(value['id'])
 
-      if (instance) return object({}, { type: instance, entities })
+      if (instance) return object({}, instance, entities)
     }
 
     return value
@@ -99,36 +92,9 @@ export function proxify(value: any, options?: { entities?: Y.Map<any> }) {
 }
 
 // convert a value to a yobject, if the type is compatible
-export function convert(
-  value: any,
-  options?: { type?: Y.AbstractType<any>; entities?: Y.Map<any> },
-) {
-  const type = options?.type
-  const entities = options?.entities
-
-  if (Array.isArray(value)) {
-    if (type && !(type instanceof Y.Array)) throw new Error()
-
-    const arr = type || new Y.Array()
-    arr.insert(
-      0,
-      value.map((child) => convert(child, { entities })),
-    )
-
-    return arr
-  }
-
+export function convert(value: any, entities?: Y.Map<any>) {
   if (value && typeof value === 'object') {
-    if (type && !(type instanceof Y.Map)) throw new Error()
-
-    const map = type || new Y.Map()
-    for (const [key, child] of Object.entries(
-      entities ? normalize(value, entities) : value,
-    )) {
-      map.set(key, convert(child, { entities }))
-    }
-
-    return map
+    return object(value, new Y.Map(), entities)[YOBJECT_KEY]
   }
 
   return value

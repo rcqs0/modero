@@ -6,6 +6,7 @@
     </div>
     <div class="flex gap-4">
       <pre>{{ state }}</pre>
+      <!-- <pre>{{ entities }}</pre> -->
     </div>
   </div>
 </template>
@@ -13,7 +14,6 @@
 <script lang="ts" setup>
 import _ from 'lodash'
 import object from '@/composables/doc/object'
-import { YOBJECT_KEY, convert } from '@/composables/doc/utils'
 import * as Y from 'yjs'
 
 const doc = new Y.Doc()
@@ -41,7 +41,8 @@ const doc = new Y.Doc()
 //   },
 //   { type: doc.getMap('entities') },
 // )
-const entities = doc.getMap('entities')
+
+// const entities = object({}, doc.getMap('entities'))
 
 const state = object(
   {
@@ -56,11 +57,16 @@ const state = object(
       },
     },
   },
-  { type: doc.getMap('state'), entities },
+  doc.getMap('state'),
+  doc.getMap('entities'),
 )
 
 function log() {
-  console.log(entities.toJSON())
+  // console.log(doc.getMap('entities').get('Course').get('Course-1').get('owner'))
+  console.log({
+    state: doc.getMap('state').toJSON(),
+    entities: doc.getMap('entities').toJSON(),
+  })
 }
 
 function update() {
