@@ -97,8 +97,8 @@ export function transact<T>(
       ? scope
       : scope instanceof Y.AbstractType
       ? scope.doc
-      : typeof scope === 'object'
-      ? inspect(scope)?.doc
+      : scope && typeof scope === 'object'
+      ? scope[YOBJECT_KEY]
       : undefined
 
   if (doc) {
