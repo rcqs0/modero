@@ -11,7 +11,6 @@
 <script lang="ts" setup>
 import _ from 'lodash'
 import useDocument, { inspect } from '@/composables/document'
-import { CACHE_KEY } from '@/composables/document/utils'
 import { ref } from 'vue'
 import * as Y from 'yjs'
 
