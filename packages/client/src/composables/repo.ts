@@ -58,18 +58,18 @@ function denormalize(input: any, entities: Entities): any {
         return toRaw(object)
       }
 
-      if (Array.isArray(target)) {
-        const method = Reflect.get(target, prop)
+      // if (Array.isArray(target)) {
+      //   const method = Reflect.get(target, prop)
 
-        if (typeof method === 'function') {
-          return function () {
-            return method.apply(
-              receiver,
-              normalize(Array.from(arguments), entities).data,
-            )
-          }
-        }
-      }
+      //   if (typeof method === 'function') {
+      //     return function () {
+      //       return method.apply(
+      //         receiver,
+      //         normalize(Array.from(arguments), entities).data,
+      //       )
+      //     }
+      //   }
+      // }
 
       return denormalize(target[prop], entities)
     },
