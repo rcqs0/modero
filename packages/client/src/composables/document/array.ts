@@ -6,7 +6,6 @@ import {
   convert,
   transact,
   bind,
-  inspect,
 } from './utils'
 
 // proxy cache
