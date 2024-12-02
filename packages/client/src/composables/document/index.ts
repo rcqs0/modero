@@ -58,7 +58,7 @@ export default function useDocument<
     watch(
       options.session,
       (session) => {
-        if (awareness) {
+        if (awareness && session) {
           for (const [key, value] of Object.entries(session)) {
             awareness!.setLocalStateField(key, value)
           }
