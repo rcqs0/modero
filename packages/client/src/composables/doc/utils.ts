@@ -2,7 +2,6 @@ import object from './object'
 // import array from './array'
 import * as Y from 'yjs'
 import { shallowRef, triggerRef } from 'vue'
-import _ from 'lodash'
 
 // used types
 export type Entities = Record<string, Record<string, any>>
@@ -28,11 +27,11 @@ export function normalize(input: any, entities: Y.Map<any>) {
   if (!input || typeof input !== 'object' || !Object.keys(input).length)
     return input
 
-  const data = _.clone(input)
+  const data = Object.assign({}, input)
 
-  _.each(data, (value, key) => {
+  for (const [key, value] of Object.entries(data)) {
     data[key] = normalize(value, entities)
-  })
+  }
 
   if ('__typename' in data && 'id' in data) {
     const { __typename, id } = data
@@ -40,13 +39,11 @@ export function normalize(input: any, entities: Y.Map<any>) {
     if (!entities.has(__typename)) {
       entities.set(__typename, new Y.Map())
     }
-
     const group = entities.get(__typename)
 
     if (!group.has(id)) {
       group.set(id, new Y.Map())
     }
-
     const instance = group.get(id)
 
     for (const [key, value] of Object.entries(data)) {
