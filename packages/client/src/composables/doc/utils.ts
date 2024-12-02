@@ -36,7 +36,6 @@ export function normalize(input: any, entities: Y.Map<any>) {
 
   if ('__typename' in data && 'id' in data) {
     const { __typename, id } = data
-    const reference = { __typename: __typename, id }
 
     if (!entities.has(__typename)) {
       entities.set(__typename, new Y.Map())
@@ -54,7 +53,7 @@ export function normalize(input: any, entities: Y.Map<any>) {
       instance.set(key, convert(value))
     }
 
-    return reference
+    return { __typename, id }
   }
 
   return data
