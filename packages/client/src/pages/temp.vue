@@ -45,7 +45,7 @@ const document = useDocument(
       woot: undefined,
     },
     pages: { a: { x: 1 }, b: { x: 2 } },
-    arr: [1, 2, 3, 4, { a: 1 }],
+    arr: [1, 2, 3, 4, { a: 1 }] as any[],
   },
   { channel: 'Course-1', session },
 )
@@ -54,14 +54,10 @@ function update() {
   const first = document.state.pages.a
   document.state.pages.a = document.state.pages.b
   document.state.pages.b = first
-  // console.log(inspect(first))
 
-  // const pages = doc.get('pages')
-  // const a = pages.get('a')
-  // pages.set('b', a.clone())
+  // document.state.arr.reverse()
+  document.state.arr.splice(2, 1, { b: 5 })
 
-  // console.log(doc.get('pages').toJSON())
-
-  document.state.arr.reverse()
+  // console.log(document.state.arr.includes(3))
 }
 </script>

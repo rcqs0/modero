@@ -5,7 +5,7 @@ import {
   proxify,
   convert,
   bind,
-  inspect,
+  transact,
 } from './utils'
 
 // proxy cache
@@ -47,16 +47,15 @@ export default function object<
     deleted.forEach((key) => untrack(key))
   })
 
+  const target = {} as any
+  target[YOBJECT_KEY] = map
+
   // create new proxy
-  const proxy = new Proxy({} as T, {
+  const proxy = new Proxy(target as T, {
     get(target, prop) {
       const cached = Reflect.get(target, CACHE_KEY)
       if (cached) {
         return Reflect.get(cached, prop)
-      }
-
-      if (prop === YOBJECT_KEY) {
-        return map
       }
 
       if (typeof prop === 'symbol') {
@@ -77,26 +76,28 @@ export default function object<
         return Reflect.set(cached, prop, value)
       }
 
-      if (map.doc) {
-        const current = receiver[prop]
-        const yobject = inspect(current)
-
-        if (yobject) {
-          current[CACHE_KEY] = yobject.toJSON()
-
-          if (yobject instanceof Y.Map) {
-            yobject.clear()
-          } else if (yobject instanceof Y.Array) {
-            yobject.delete(0, yobject.length)
-          }
-        }
-      }
-
       if (typeof prop === 'symbol') {
         return Reflect.set(target, prop, value)
       }
 
-      map.set(prop, convert(value))
+      transact(map, () => {
+        if (map.doc) {
+          const current = receiver[prop]
+          const yobject = current?.[YOBJECT_KEY]
+
+          if (yobject) {
+            current[CACHE_KEY] = yobject.toJSON()
+
+            if (yobject instanceof Y.Map) {
+              yobject.clear()
+            } else if (yobject instanceof Y.Array) {
+              yobject.delete(0, yobject.length)
+            }
+          }
+        }
+
+        map.set(prop, convert(value))
+      })
       return true
     },
     deleteProperty(target, prop) {

@@ -65,8 +65,11 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
     }
   })
 
+  const target = [] as any
+  target[YOBJECT_KEY] = arr
+
   // create new proxy
-  const proxy = new Proxy([] as T[], {
+  const proxy = new Proxy(target as T[], {
     get(target, prop, receiver) {
       const cached = Reflect.get(target, CACHE_KEY)
       if (cached) {
@@ -74,10 +77,6 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
       }
 
       const key = toKey(prop)
-
-      if (key === YOBJECT_KEY) {
-        return arr
-      }
 
       if (typeof key === 'symbol') {
         return Reflect.get(target, key)
@@ -87,94 +86,94 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
         return true
       }
 
-      if (typeof key === 'number') {
-        track(key)
-
-        return proxify(arr.get(key))
-      }
-
       if (key === 'length') {
         track()
 
         return arr.length
       }
 
-      if (key === 'pop') {
-        return function () {
-          const index = arr.length - 1
+      // if (key === 'pop') {
+      //   return function () {
+      //     const index = arr.length - 1
 
-          const value = receiver[index]
-          arr.delete(index)
+      //     const value = receiver[index]
+      //     arr.delete(index)
 
-          return value
-        }
-      }
+      //     return value
+      //   }
+      // }
 
-      if (key === 'push') {
-        return function () {
-          arr.push(Array.from(arguments).map(convert))
+      // if (key === 'push') {
+      //   return function () {
+      //     arr.push(Array.from(arguments).map(convert))
 
-          return arr.length
-        }
-      }
+      //     return arr.length
+      //   }
+      // }
 
-      if (key === 'shift') {
-        return function () {
-          const value = receiver[0]
-          arr.delete(0)
+      // if (key === 'shift') {
+      //   return function () {
+      //     const value = receiver[0]
+      //     arr.delete(0)
 
-          return value
-        }
-      }
+      //     return value
+      //   }
+      // }
 
-      if (key === 'splice') {
-        return function () {
-          const length = arr.length
+      // if (key === 'splice') {
+      //   return function () {
+      //     const length = arr.length
 
-          const start =
-            !arguments.length || arguments[0] < -length
-              ? 0
-              : arguments[0] > length
-              ? length
-              : arguments[0] < 0
-              ? length - Math.abs(arguments[0])
-              : arguments[0]
-          const deleteCount =
-            arguments.length === 1 || start + arguments[1] > length
-              ? length - start
-              : arguments[1] < 0
-              ? 0
-              : arguments[1]
-          const items = Array.from(arguments).slice(2)
+      //     const start =
+      //       !arguments.length || arguments[0] < -length
+      //         ? 0
+      //         : arguments[0] > length
+      //         ? length
+      //         : arguments[0] < 0
+      //         ? length - Math.abs(arguments[0])
+      //         : arguments[0]
+      //     const deleteCount =
+      //       arguments.length === 1 || start + arguments[1] > length
+      //         ? length - start
+      //         : arguments[1] < 0
+      //         ? 0
+      //         : arguments[1]
+      //     const items = Array.from(arguments).slice(2)
 
-          const deleted: T[] = []
-          for (let i = start; i < start + deleteCount; i++) {
-            deleted.push(receiver[i])
-          }
+      //     const deleted: T[] = []
+      //     for (let i = start; i < start + deleteCount; i++) {
+      //       deleted.push(receiver[i])
+      //     }
 
-          transact(arr, () => {
-            arr.delete(start, deleteCount)
-            arr.insert(start, items.map(convert))
-          })
+      //     transact(arr, () => {
+      //       arr.delete(start, deleteCount)
+      //       arr.insert(start, items.map(convert))
+      //     })
 
-          return deleted
-        }
-      }
+      //     return deleted
+      //   }
+      // }
 
-      if (key === 'unshift') {
-        return function () {
-          arr.unshift(Array.from(arguments).map(convert))
+      // if (key === 'unshift') {
+      //   return function () {
+      //     arr.unshift(Array.from(arguments).map(convert))
 
-          return arr.length
-        }
-      }
+      //     return arr.length
+      //   }
+      // }
 
       // wrap any other functions that perform multiple updates in a transaction
       if (
         key === 'copyWithin' ||
         key === 'fill' ||
         key === 'reverse' ||
-        key === 'sort'
+        key === 'sort' ||
+        // poc
+        key === 'pop' ||
+        key === 'push' ||
+        key === 'shift' ||
+        key === 'splice' ||
+        key === 'unshift'
       ) {
         const method = Reflect.get(target, prop)
 
@@ -183,6 +182,12 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
             return method.apply(receiver, arguments)
           })
         }
+      }
+
+      if (typeof key === 'number') {
+        track(key)
+
+        return proxify(arr.get(key))
       }
 
       return Reflect.get(target, prop, receiver)
@@ -209,36 +214,10 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
         return Reflect.set(cached, prop, value)
       }
 
-      if (arr.doc) {
-        const current = receiver[prop]
-        const yobject = inspect(current)
-
-        if (yobject) {
-          current[CACHE_KEY] = yobject.toJSON()
-
-          if (yobject instanceof Y.Map) {
-            yobject.clear()
-          } else if (yobject instanceof Y.Array) {
-            yobject.delete(0, yobject.length)
-          }
-        }
-      }
-
       const key = toKey(prop)
 
       if (typeof key === 'symbol') {
         return Reflect.set(target, key, value)
-      }
-
-      if (typeof key === 'number') {
-        const converted = convert(value)
-
-        transact(arr, () => {
-          arr.delete(key, 1)
-          arr.insert(key, [converted])
-        })
-
-        return true
       }
 
       if (key === 'length') {
@@ -247,6 +226,32 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
         if (value < length) {
           arr.delete(value, length - value)
         }
+
+        return true
+      }
+
+      if (typeof key === 'number') {
+        transact(arr, () => {
+          if (arr.doc) {
+            const current = receiver[key]
+            const yobject = current?.[YOBJECT_KEY]
+
+            if (yobject) {
+              current[CACHE_KEY] = yobject.toJSON()
+
+              if (yobject instanceof Y.Map) {
+                yobject.clear()
+              } else if (yobject instanceof Y.Array) {
+                yobject.delete(0, yobject.length)
+              }
+            }
+          }
+
+          const converted = convert(value)
+
+          arr.delete(key, 1)
+          arr.insert(key, [converted])
+        })
 
         return true
       }
