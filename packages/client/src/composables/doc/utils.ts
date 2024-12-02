@@ -61,16 +61,10 @@ export function normalize(input: any, entities: Y.Map<any>) {
 }
 
 export function denormalize(value: any, entities: Y.Map<any>) {
-  if (value instanceof Y.Map) {
-    if (entities && value.has('__typename') && value.has('id')) {
-      const instance = entities
-        .get(value.get('__typename'))
-        ?.get(value.get('id'))
+  if (value instanceof Y.Map && value.has('__typename') && value.has('id')) {
+    const instance = entities.get(value.get('__typename'))?.get(value.get('id'))
 
-      if (instance) return instance
-    }
-
-    return object({}, value, entities)
+    if (instance) return instance
   }
 
   return value
