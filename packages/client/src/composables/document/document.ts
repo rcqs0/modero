@@ -19,6 +19,7 @@ export default function document<
         doc.getMap(key)
       } else {
         object(value, doc.getMap(key))
+        console.log('THIS')
       }
     }
   }

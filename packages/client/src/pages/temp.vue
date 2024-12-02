@@ -1,8 +1,12 @@
 <template>
   <div class="p-4">
-    <Button @click="update">Update</Button>
+    <div class="flex gap-2">
+      <Button @click="log">Log</Button>
+      <Button @click="update">Update</Button>
+    </div>
     <div class="flex gap-4">
       <pre>{{ document.state }}</pre>
+      <pre>{{ document.entities }}</pre>
       <pre>{{ document.collaborators }}</pre>
     </div>
   </div>
@@ -10,22 +14,8 @@
 
 <script lang="ts" setup>
 import _ from 'lodash'
-import useDocument, { inspect } from '@/composables/document'
+import useDocument from '@/composables/document'
 import { ref } from 'vue'
-import * as Y from 'yjs'
-
-const doc = new Y.Doc()
-const pages = doc.getMap('pages')
-const a = new Y.Map()
-a.set('x', 1)
-pages.set('a', a)
-const b = new Y.Map()
-b.set('x', 2)
-pages.set('b', b)
-
-pages.set('a', b.clone())
-
-// console.log(pages.toJSON(), a)
 
 defineProps<{}>()
 
@@ -41,22 +31,22 @@ const document = useDocument(
       __typename: 'Course',
       id: 'Course-1',
       title: 'Course 1',
-      woot: undefined,
+      sections: [] as any[],
     },
-    pages: { a: { x: 1 }, b: { x: 2 } },
-    arr: [1, 2, 3, 4, { a: 1 }] as any[],
   },
   { channel: 'Course-1', session },
 )
 
+function log() {
+  console.log(document.doc)
+}
+
 function update() {
-  const first = document.state.pages.a
-  document.state.pages.a = document.state.pages.b
-  document.state.pages.b = first
-
-  // document.state.arr.reverse()
-  document.state.arr.splice(2, 1, { b: 5 })
-
-  // console.log(document.state.arr.includes(3))
+  document.state.course.title = `Yaaaargh ${_.uniqueId()}`
+  document.state.course.sections.push({
+    __typename: 'Section',
+    id: `Section-${_.uniqueId()}`,
+    title: `Section ${_.uniqueId()}`,
+  })
 }
 </script>
