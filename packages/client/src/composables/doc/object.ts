@@ -14,7 +14,7 @@ const objects = new WeakMap<Y.Map<any>>()
 
 export default function object<
   T extends Record<string, any> = Record<string, any>,
->(init = {} as T, map: Y.Map<any>, entities?: Y.Map<any>) {
+>(init = {} as T, map = new Y.Map<any>(), entities?: Y.Map<any>) {
   // return cached proxy if available
   if (objects.has(map)) return objects.get(map)
 
@@ -70,8 +70,7 @@ export default function object<
       }
 
       transact(map, () => {
-        const input = entities ? normalize(value, entities) : value
-        map.set(prop, convert(input, entities))
+        map.set(prop, convert(entities ? normalize(value, entities) : value))
       })
 
       return true

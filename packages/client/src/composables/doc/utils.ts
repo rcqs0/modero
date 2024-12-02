@@ -79,9 +79,9 @@ export function proxify(value: any, entities?: Y.Map<any>) {
 }
 
 // convert a value to a yobject, if the type is compatible
-export function convert(value: any, entities?: Y.Map<any>) {
+export function convert(value: any) {
   if (value && typeof value === 'object') {
-    return object(value, new Y.Map(), entities)[YOBJECT_KEY]
+    return object(value)[YOBJECT_KEY]
   }
 
   return value
