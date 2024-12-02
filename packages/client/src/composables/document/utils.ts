@@ -2,6 +2,10 @@ import object from './object'
 import array from './array'
 import * as Y from 'yjs'
 import { shallowRef, triggerRef } from 'vue'
+import _ from 'lodash'
+
+// used types
+export type Entities = Record<string, Record<string, any>>
 
 // symbol key used to expose the inner yobject of a proxy
 export const YOBJECT_KEY = Symbol('yobject')
@@ -17,13 +21,13 @@ export function inspect(value: any) {
 }
 
 // resolve a value into a proxy, if available
-export function proxify(value: any) {
+export function proxify(value: any, entities?: any) {
   if (value instanceof Y.Array) {
     return array([], value)
   }
 
   if (value instanceof Y.Map) {
-    return object({}, value)
+    return object({}, value, entities)
   }
 
   if (Array.isArray(value)) {
@@ -31,15 +35,15 @@ export function proxify(value: any) {
   }
 
   if (value && typeof value === 'object') {
-    return object(value)
+    return object(value, new Y.Map(), entities)
   }
 
   return value
 }
 
 // convert a value to a yobject, if the type is compatible
-export function convert(value: any) {
-  return inspect(proxify(value)) ?? value
+export function convert(value: any, entities?: any) {
+  return inspect(proxify(value, entities)) ?? value
 }
 
 // perform a transaction on the ydoc bound to the provided scope, if applicable
@@ -118,4 +122,44 @@ export function bind<T extends Y.YEvent<any>>(
   }
 
   return track
+}
+
+// normalization
+export function normalize(
+  input: any,
+  entities: Entities = {},
+): {
+  data: any
+  entities: Entities
+} {
+  if (!input || typeof input !== 'object') return { data: input, entities }
+
+  const data = _.clone(input)
+
+  _.each(data, (value, key) => {
+    data[key] = normalize(value, entities).data
+  })
+
+  if ('__typename' in data && 'id' in data) {
+    const { __typename: type, id } = data
+    const reference = { __typename: type, id }
+
+    if (!entities[type]) entities[type] = {}
+
+    if (!entities[type][id]) {
+      entities[type][id] = data
+    } else {
+      const instance = entities[type][id]
+
+      for (const [key, value] of Object.entries(data)) {
+        if (!_.isEqual(instance[key], value)) {
+          instance[key] = value
+        }
+      }
+    }
+
+    return { data: reference, entities }
+  }
+
+  return { data, entities }
 }

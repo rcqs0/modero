@@ -6,6 +6,7 @@ import {
   convert,
   bind,
   transact,
+  normalize,
 } from './utils'
 
 // proxy cache
@@ -13,11 +14,7 @@ const objects = new WeakMap<Y.Map<any>>()
 
 export default function object<
   T extends Record<string, any> = Record<string, any>,
->(init = {} as T, map = new Y.Map<any>()) {
-  // if (Object.keys(init).length && map.size) {
-  //   throw new Error("Can't provide initial values for a non-empty map.")
-  // }
-
+>(init = {} as T, map = new Y.Map<any>(), entities?: any) {
   // return cached proxy if available
   if (objects.has(map)) return objects.get(map)
 
@@ -68,7 +65,21 @@ export default function object<
 
       track(prop)
 
-      return proxify(map.get(prop))
+      const input = map.get(prop)
+
+      // console.log(entities)
+
+      if (entities) {
+        if (input instanceof Y.Map) {
+          const instance = entities[input.get('__typename')]?.[input.get('id')]
+          if (instance) return instance
+        } else if (typeof input === 'object' && input) {
+          const instance = entities[input.__typename]?.[input.id]
+          if (instance) return instance
+        }
+      }
+
+      return proxify(input, entities)
     },
     set(target, prop, value, receiver) {
       const cached = Reflect.get(target, CACHE_KEY)
@@ -96,7 +107,12 @@ export default function object<
           }
         }
 
-        map.set(prop, convert(value))
+        if (entities) {
+          const { data: normalized } = normalize(value, entities)
+          map.set(prop, convert(normalized, entities))
+        } else {
+          map.set(prop, convert(value))
+        }
       })
       return true
     },

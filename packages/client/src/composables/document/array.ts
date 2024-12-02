@@ -310,13 +310,11 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
 
       track()
 
-      const keys: string[] = []
+      const keys = ['length']
 
       for (let i = 0; i < arr.length; i++) {
         keys.push(`${i}`)
       }
-
-      keys.push('length')
 
       return keys
     },

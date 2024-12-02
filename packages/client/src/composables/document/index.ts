@@ -1,8 +1,9 @@
-import { onBeforeUnmount, Ref, ref, shallowRef, watch, reactive } from 'vue'
+import { onBeforeUnmount, Ref, ref, watch, reactive } from 'vue'
 import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket'
 import { Awareness } from 'y-protocols/awareness'
-import document from './document'
+import object from './object'
+import { Entities } from './utils'
 
 export { inspect, transact } from './utils'
 
@@ -11,8 +12,9 @@ export default function useDocument<
   C extends Record<string, any>,
 >(init: T, options?: { channel?: string; session?: Ref<C> }) {
   const doc = new Y.Doc()
+  const entities = object({} as Entities, doc.getMap('entities'))
+  const state = object({} as T, doc.getMap('state'), entities)
 
-  const state = shallowRef<T>({} as T)
   const synced = ref(false)
   const initialized = ref(false)
   const error = ref<string | null>(null)
@@ -36,7 +38,9 @@ export default function useDocument<
 
     provider.on('sync', (event: boolean) => {
       if (event) {
-        state.value = document(init, doc)
+        if (!Object.keys(state).length) {
+          Object.assign(state, init)
+        }
         synced.value = true
         initialized.value = true
       }
@@ -50,7 +54,7 @@ export default function useDocument<
       collaborators.value = Array.from(awareness!.getStates().values()) as C[]
     })
   } else {
-    state.value = document(init)
+    Object.assign(state, init)
     initialized.value = true
   }
 
@@ -79,8 +83,9 @@ export default function useDocument<
   })
 
   return reactive({
-    state,
     doc,
+    entities,
+    state,
     initialized,
     synced,
     provider,
