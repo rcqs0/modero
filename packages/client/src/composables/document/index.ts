@@ -12,7 +12,7 @@ export default function useDocument<
   C extends Record<string, any>,
 >(init: T, options?: { channel?: string; session?: Ref<C> }) {
   const doc = new Y.Doc()
-  const entities = object({} as Entities, doc.getMap('entities'))
+  const entities = doc.getMap('entities')
   const state = object({} as T, doc.getMap('state'), entities)
 
   const synced = ref(false)

@@ -7,7 +7,10 @@ import {
   bind,
   transact,
   normalize,
+  normalize2,
 } from './utils'
+
+const ENTITIES_KEY = Symbol('entities')
 
 // proxy cache
 const objects = new WeakMap<Y.Map<any>>()
@@ -46,6 +49,7 @@ export default function object<
 
   const target = {} as any
   target[YOBJECT_KEY] = map
+  target[ENTITIES_KEY] = entities
 
   // create new proxy
   const proxy = new Proxy(target as T, {
@@ -65,17 +69,24 @@ export default function object<
 
       track(prop)
 
+      // console.log('GET', prop)
       const input = map.get(prop)
 
-      // console.log(entities)
+      if (
+        entities &&
+        input instanceof Y.Map &&
+        input.has('__typename') &&
+        input.has('id')
+      ) {
+        // const instance = entities[input.get('__typename')]?.[input.get('id')]
+        const instance = entities
+          .get(input.get('__typename'))
+          ?.get(input.get('id'))
 
-      if (entities) {
-        if (input instanceof Y.Map) {
-          const instance = entities[input.get('__typename')]?.[input.get('id')]
-          if (instance) return instance
-        } else if (typeof input === 'object' && input) {
-          const instance = entities[input.__typename]?.[input.id]
-          if (instance) return instance
+        // console.log(0, input.toJSON(), instance.toJSON())
+
+        if (instance) {
+          return proxify(instance, entities)
         }
       }
 
@@ -92,23 +103,24 @@ export default function object<
       }
 
       transact(map, () => {
-        if (map.doc) {
-          const current = receiver[prop]
-          const yobject = current?.[YOBJECT_KEY]
+        // if (map.doc) {
+        //   const current = receiver[prop]
+        //   const yobject = current?.[YOBJECT_KEY]
 
-          if (yobject) {
-            current[CACHE_KEY] = yobject.toJSON()
+        //   if (yobject) {
+        //     current[CACHE_KEY] = yobject.toJSON()
 
-            if (yobject instanceof Y.Map) {
-              yobject.clear()
-            } else if (yobject instanceof Y.Array) {
-              yobject.delete(0, yobject.length)
-            }
-          }
-        }
+        //     if (yobject instanceof Y.Map) {
+        //       yobject.clear()
+        //     } else if (yobject instanceof Y.Array) {
+        //       yobject.delete(0, yobject.length)
+        //     }
+        //   }
+        // }
 
         if (entities) {
-          const { data: normalized } = normalize(value, entities)
+          const { data: normalized } = normalize(value, object({}, entities))
+          // const { data: normalized } = normalize2(value, entities)
           map.set(prop, convert(normalized, entities))
         } else {
           map.set(prop, convert(value))

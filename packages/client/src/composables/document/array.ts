@@ -6,6 +6,7 @@ import {
   convert,
   transact,
   bind,
+  normalize,
 } from './utils'
 
 // proxy cache
@@ -24,7 +25,11 @@ function toKey(prop: string | number | symbol) {
   return prop
 }
 
-export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
+export default function array<T>(
+  init: T[] = [],
+  arr = new Y.Array<T>(),
+  entities?: any,
+) {
   // if (init.length && arr.doc && arr.length) {
   //   throw new Error("Can't provide initial values for a non-empty array.")
   // }
@@ -186,7 +191,20 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
       if (typeof key === 'number') {
         track(key)
 
-        return proxify(arr.get(key))
+        const input = arr.get(key) as any
+
+        if (entities) {
+          if (input instanceof Y.Map) {
+            const instance =
+              entities[input.get('__typename')]?.[input.get('id')]
+            if (instance) return instance
+          } else if (typeof input === 'object' && input) {
+            const instance = entities[input.__typename]?.[input.id]
+            if (instance) return instance
+          }
+        }
+
+        return proxify(arr.get(key), entities)
       }
 
       return Reflect.get(target, prop, receiver)
@@ -246,10 +264,17 @@ export default function array<T>(init: T[] = [], arr = new Y.Array<T>()) {
             }
           }
 
-          const converted = convert(value)
+          if (key < length) {
+            arr.delete(key, 1)
+          }
 
-          arr.delete(key, 1)
-          arr.insert(key, [converted])
+          if (entities) {
+            console.log('YEAAP')
+            const { data: normalized } = normalize(value, entities)
+            arr.insert(key, [convert(normalized, entities)])
+          } else {
+            arr.insert(key, [convert(value)])
+          }
         })
 
         return true

@@ -23,7 +23,7 @@ export function inspect(value: any) {
 // resolve a value into a proxy, if available
 export function proxify(value: any, entities?: any) {
   if (value instanceof Y.Array) {
-    return array([], value)
+    return array([], value, entities)
   }
 
   if (value instanceof Y.Map) {
@@ -31,7 +31,7 @@ export function proxify(value: any, entities?: any) {
   }
 
   if (Array.isArray(value)) {
-    return array(value)
+    return array(value, new Y.Array(), entities)
   }
 
   if (value && typeof value === 'object') {
@@ -132,7 +132,8 @@ export function normalize(
   data: any
   entities: Entities
 } {
-  if (!input || typeof input !== 'object') return { data: input, entities }
+  if (!input || typeof input !== 'object' || !Object.keys(input).length)
+    return { data: input, entities }
 
   const data = _.clone(input)
 
@@ -155,6 +156,47 @@ export function normalize(
         if (!_.isEqual(instance[key], value)) {
           instance[key] = value
         }
+      }
+    }
+
+    return { data: reference, entities }
+  }
+
+  return { data, entities }
+}
+
+export function normalize2(
+  input: any,
+  entities: Y.Map<any>,
+): {
+  data: any
+  entities: Y.Map<any>
+} {
+  if (!input || typeof input !== 'object') return { data: input, entities }
+
+  const data = _.clone(input)
+
+  _.each(data, (value, key) => {
+    data[key] = normalize2(value, entities).data
+  })
+
+  if ('__typename' in data && 'id' in data) {
+    const { __typename: type, id } = data
+    const reference = { __typename: type, id }
+
+    if (!entities.get(type)) {
+      entities.set(type, new Y.Map())
+    }
+
+    if (!entities.get(type).get(id)) {
+      entities.get(type).set(id, new Y.Map())
+    }
+
+    const instance = entities.get(type).get(id)
+
+    for (const [key, value] of Object.entries(data)) {
+      if (!_.isEqual(instance[key], value)) {
+        instance.set(key, value)
       }
     }
 
