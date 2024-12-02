@@ -1,5 +1,12 @@
 import * as Y from 'yjs'
-import { YOBJECT_KEY, proxify, convert, bind, normalize } from './utils'
+import {
+  YOBJECT_KEY,
+  proxify,
+  convert,
+  bind,
+  normalize,
+  denormalize,
+} from './utils'
 
 // proxy cache
 const objects = new WeakMap<Y.Map<any>>()
@@ -54,12 +61,7 @@ export default function object<
       track(prop)
 
       const input = map.get(prop)
-
-      if (input instanceof Y.Map) {
-        // TODO: denormalize before proxify?
-      }
-
-      return proxify(input, entities)
+      return proxify(entities ? denormalize(input, entities) : input, entities)
     },
     set(target, prop, value, _receiver) {
       if (typeof prop === 'symbol') {
