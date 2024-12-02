@@ -1,0 +1,213 @@
+import object from './object'
+// import array from './array'
+import * as Y from 'yjs'
+import { shallowRef, triggerRef } from 'vue'
+import _ from 'lodash'
+
+// used types
+export type Entities = Record<string, Record<string, any>>
+
+// symbol key used to expose the inner yobject of a proxy
+export const YOBJECT_KEY = Symbol('yobject')
+
+// symbol key used to cache values destroyed instances
+export const CACHE_KEY = Symbol('cache')
+
+// symbol key used to store a reference to the entities proxy
+export const ENTITIES_KEY = Symbol('entities')
+
+// inspect a value, returning it's related yobject if available
+export function inspect(value: any) {
+  if (typeof value === 'object' && value) {
+    return value[YOBJECT_KEY] as Y.AbstractType<any>
+  }
+}
+
+// normalization & denormalization
+export function normalize(input: any, entities: Y.Map<any>) {
+  if (!input || typeof input !== 'object' || !Object.keys(input).length)
+    return input
+
+  const data = _.clone(input)
+
+  _.each(data, (value, key) => {
+    data[key] = normalize(value, entities)
+  })
+
+  if ('__typename' in data && 'id' in data) {
+    const { __typename, id } = data
+    const reference = { __typename: __typename, id }
+
+    if (!entities.has(__typename)) {
+      entities.set(__typename, new Y.Map())
+    }
+
+    const group = entities.get(__typename)
+
+    if (!group.has(id)) {
+      group.set(id, new Y.Map())
+    }
+
+    const instance = group.get(id)
+
+    for (const [key, value] of Object.entries(data)) {
+      instance.set(key, value)
+    }
+
+    return reference
+  }
+
+  return data
+}
+
+// resolve a value into a proxy, if available
+export function proxify(value: any, options?: { entities?: Y.Map<any> }) {
+  const entities = options?.entities
+
+  if (Array.isArray(value)) {
+    // TODO: array
+    return value
+  }
+
+  if (value instanceof Y.Map) {
+    if (entities && value.has('__typename') && value.has('id')) {
+      const instance = entities
+        .get(value.get('__typename'))
+        ?.get(value.get('id'))
+
+      if (instance) return object({}, { type: instance, entities })
+    }
+
+    return object({}, { type: value, entities })
+  }
+
+  if (
+    value &&
+    typeof value === 'object' &&
+    !(value instanceof Y.AbstractType)
+  ) {
+    if (entities && '__typename' in value && 'id' in value) {
+      const instance = entities.get(value['__typename'])?.get(value['id'])
+
+      if (instance) return object({}, { type: instance, entities })
+    }
+
+    return value
+  }
+
+  return value
+}
+
+// convert a value to a yobject, if the type is compatible
+export function convert(
+  value: any,
+  options?: { type?: Y.AbstractType<any>; entities?: Y.Map<any> },
+) {
+  const type = options?.type
+  const entities = options?.entities
+
+  if (Array.isArray(value)) {
+    if (type && !(type instanceof Y.Array)) throw new Error()
+
+    const arr = type || new Y.Array()
+    arr.insert(
+      0,
+      value.map((child) => convert(child, { entities })),
+    )
+
+    return arr
+  }
+
+  if (value && typeof value === 'object') {
+    if (type && !(type instanceof Y.Map)) throw new Error()
+
+    const map = type || new Y.Map()
+    for (const [key, child] of Object.entries(
+      entities ? normalize(value, entities) : value,
+    )) {
+      map.set(key, convert(child, { entities }))
+    }
+
+    return map
+  }
+
+  return value
+}
+
+// perform a transaction on the ydoc bound to the provided scope, if applicable
+export function transact<T>(
+  scope: any,
+  f: (transaction?: Y.Transaction) => T,
+): T {
+  const doc =
+    scope instanceof Y.Doc
+      ? scope
+      : scope instanceof Y.AbstractType
+      ? scope.doc
+      : typeof scope === 'object'
+      ? inspect(scope)?.doc
+      : undefined
+
+  if (doc) {
+    return doc.transact(f)
+  }
+
+  return f()
+}
+
+// bind yobject to the reactivity system
+export function bind<T extends Y.YEvent<any>>(
+  value: Y.AbstractType<any>,
+  observe: (
+    event: T,
+    trigger: (key?: string | number) => void,
+    untrack: (key?: string | number) => void,
+  ) => any,
+) {
+  const bindings = new Map<
+    string | number | null,
+    {
+      track: () => any
+      trigger: () => void
+    }
+  >()
+
+  function trigger(key: string | number | null = null) {
+    bindings.get(key)?.trigger()
+  }
+
+  function untrack(key: string | number | null = null) {
+    bindings.delete(key)
+  }
+
+  function handler(event: T) {
+    observe(event, trigger, untrack)
+
+    if (!bindings.size) {
+      value.unobserve(handler)
+    }
+  }
+
+  function track(key: string | number | null = null) {
+    if (!bindings.size) {
+      value.observe(handler)
+    }
+
+    let binding = bindings.get(key)
+
+    if (!binding) {
+      const observable = shallowRef()
+
+      binding = {
+        track: () => observable.value,
+        trigger: () => triggerRef(observable),
+      }
+
+      bindings.set(key, binding)
+    }
+
+    binding.track()
+  }
+
+  return track
+}
