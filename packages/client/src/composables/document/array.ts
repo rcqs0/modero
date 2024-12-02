@@ -251,8 +251,6 @@ export default function array<T>(
       if (key === 'length') {
         const length = arr.length
 
-        console.log('length', value)
-
         if (value < length) {
           arr.delete(value, length - value)
         }
@@ -281,6 +279,12 @@ export default function array<T>(
 
           if (key < arr.length) {
             arr.delete(key, 1)
+          }
+          if (key > arr.length) {
+            arr.insert(
+              arr.length,
+              [...Array(key - arr.length).keys()].map(() => null) as any,
+            )
           }
 
           if (entities) {
