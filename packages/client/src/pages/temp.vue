@@ -7,7 +7,7 @@
     <div class="flex gap-4">
       <pre>{{ document.state }}</pre>
       <pre>{{ document.entities }}</pre>
-      <pre>{{ document.collaborators }}</pre>
+      <!-- <pre>{{ document.collaborators }}</pre> -->
     </div>
   </div>
 </template>
@@ -49,24 +49,30 @@ const session = ref({
 
 const document = useDocument(
   {
+    boss: {
+      __typename: 'Person',
+      id: `Person-0`,
+      title: `Person 45`,
+    },
     course: {
       __typename: 'Course',
       id: 'Course-1',
       title: 'Course 1',
-      // sections: [] as any[],
-      // owner: {
-      //   __typename: 'Person',
-      //   id: `Person-0`,
-      //   title: `Person 0`,
-      // },
+      sections: [] as any[],
+      owner: {
+        __typename: 'Person',
+        id: `Person-0`,
+        title: `Person 0`,
+      },
     },
   },
   { channel: 'Course-1', session },
 )
 
 function log() {
-  console.log(document.doc.toJSON())
-  // console.log(document.entities)
+  // console.log(document.doc.toJSON())
+  // console.log(document.state.course.owner)
+  console.log(document.state.course.owner)
   // console.log(document.state.course)
 }
 
@@ -74,15 +80,15 @@ function update() {
   // document.state.course.owner
   const id = _.uniqueId()
   document.state.course.title = `Yaaaargh ${id}`
-  // document.state.course.owner = {
-  //   __typename: 'Person',
-  //   id: `Person-${id}`,
-  //   title: `Person ${id}`,
-  // }
-  // document.state.course.sections.push({
-  //   __typename: 'Section',
-  //   id: `Section-${id}`,
-  //   title: `Section ${id}`,
-  // })
+  document.state.course.owner = {
+    __typename: 'Person',
+    id: `Person-${id}`,
+    title: `Person ${id}`,
+  }
+  document.state.course.sections.push({
+    __typename: 'Section',
+    id: `Section-${id}`,
+    title: `Section ${id}`,
+  })
 }
 </script>

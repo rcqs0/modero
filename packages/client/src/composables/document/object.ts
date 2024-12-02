@@ -7,10 +7,9 @@ import {
   bind,
   transact,
   normalize,
-  normalize2,
 } from './utils'
 
-const ENTITIES_KEY = Symbol('entities')
+export const ENTITIES_KEY = Symbol('entities')
 
 // proxy cache
 const objects = new WeakMap<Y.Map<any>>()
@@ -19,7 +18,11 @@ export default function object<
   T extends Record<string, any> = Record<string, any>,
 >(init = {} as T, map = new Y.Map<any>(), entities?: any) {
   // return cached proxy if available
-  if (objects.has(map)) return objects.get(map)
+  if (objects.has(map)) {
+    const existing = objects.get(map)
+    existing[ENTITIES_KEY] = entities
+    return existing
+  }
 
   const track = bind(map, (event: Y.YMapEvent<any>, trigger, untrack) => {
     const added: string[] = []
@@ -53,7 +56,7 @@ export default function object<
 
   // create new proxy
   const proxy = new Proxy(target as T, {
-    get(target, prop) {
+    get(target, prop, receiver) {
       const cached = Reflect.get(target, CACHE_KEY)
       if (cached) {
         return Reflect.get(cached, prop)
@@ -69,8 +72,8 @@ export default function object<
 
       track(prop)
 
-      // console.log('GET', prop)
       const input = map.get(prop)
+      const entities = receiver[ENTITIES_KEY]
 
       if (
         entities &&
@@ -79,11 +82,9 @@ export default function object<
         input.has('id')
       ) {
         // const instance = entities[input.get('__typename')]?.[input.get('id')]
-        const instance = entities
-          .get(input.get('__typename'))
-          ?.get(input.get('id'))
-
-        // console.log(0, input.toJSON(), instance.toJSON())
+        const instance = entities[YOBJECT_KEY].get(
+          input.get('__typename'),
+        )?.get(input.get('id'))
 
         if (instance) {
           return proxify(instance, entities)
@@ -102,26 +103,27 @@ export default function object<
         return Reflect.set(target, prop, value)
       }
 
+      const entities = receiver[ENTITIES_KEY]
+
       transact(map, () => {
-        // if (map.doc) {
-        //   const current = receiver[prop]
-        //   const yobject = current?.[YOBJECT_KEY]
+        if (map.doc) {
+          const current = receiver[prop]
+          const yobject = current?.[YOBJECT_KEY]
 
-        //   if (yobject) {
-        //     current[CACHE_KEY] = yobject.toJSON()
+          if (yobject && yobject.parent?.parent !== entities[YOBJECT_KEY]) {
+            current[CACHE_KEY] = yobject.toJSON()
 
-        //     if (yobject instanceof Y.Map) {
-        //       yobject.clear()
-        //     } else if (yobject instanceof Y.Array) {
-        //       yobject.delete(0, yobject.length)
-        //     }
-        //   }
-        // }
+            if (yobject instanceof Y.Map) {
+              yobject.clear()
+            } else if (yobject instanceof Y.Array) {
+              yobject.delete(0, yobject.length)
+            }
+          }
+        }
 
         if (entities) {
-          const { data: normalized } = normalize(value, object({}, entities))
-          // const { data: normalized } = normalize2(value, entities)
-          map.set(prop, convert(normalized, entities))
+          const { data } = normalize(value, entities)
+          map.set(prop, convert(data, entities))
         } else {
           map.set(prop, convert(value))
         }

@@ -8,6 +8,7 @@ import {
   bind,
   normalize,
 } from './utils'
+import { ENTITIES_KEY } from './object'
 
 // proxy cache
 const arrays = new WeakMap<Y.Array<any>>()
@@ -35,7 +36,11 @@ export default function array<T>(
   // }
 
   // return cached proxy if available
-  if (arrays.has(arr)) return arrays.get(arr)
+  if (arrays.has(arr)) {
+    const existing = arrays.get(arr)
+    existing[ENTITIES_KEY] = entities
+    return existing
+  }
 
   const track = bind(arr, (event: Y.YArrayEvent<any>, trigger, untrack) => {
     const start = event.delta[0]?.retain || 0
@@ -188,19 +193,25 @@ export default function array<T>(
         }
       }
 
+      const entities = receiver[ENTITIES_KEY]
+
       if (typeof key === 'number') {
         track(key)
 
         const input = arr.get(key) as any
 
-        if (entities) {
-          if (input instanceof Y.Map) {
-            const instance =
-              entities[input.get('__typename')]?.[input.get('id')]
-            if (instance) return instance
-          } else if (typeof input === 'object' && input) {
-            const instance = entities[input.__typename]?.[input.id]
-            if (instance) return instance
+        if (
+          entities &&
+          input instanceof Y.Map &&
+          input.has('__typename') &&
+          input.has('id')
+        ) {
+          const instance = entities[YOBJECT_KEY].get(
+            input.get('__typename'),
+          )?.get(input.get('id'))
+
+          if (instance) {
+            return proxify(instance, entities)
           }
         }
 
@@ -247,6 +258,8 @@ export default function array<T>(
         return true
       }
 
+      const entities = receiver[ENTITIES_KEY]
+
       if (typeof key === 'number') {
         transact(arr, () => {
           if (arr.doc) {
@@ -269,9 +282,8 @@ export default function array<T>(
           }
 
           if (entities) {
-            console.log('YEAAP')
-            const { data: normalized } = normalize(value, entities)
-            arr.insert(key, [convert(normalized, entities)])
+            const { data } = normalize(value, entities)
+            arr.insert(key, [convert(data, entities)])
           } else {
             arr.insert(key, [convert(value)])
           }
