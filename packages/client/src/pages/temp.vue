@@ -64,6 +64,7 @@ const document = useDocument(
         id: `Person-0`,
         title: `Person 0`,
       },
+      tags: ['a', 'b', 'c', 'd', 'e'],
     },
   },
   { channel: 'Course-1', session },
@@ -72,8 +73,10 @@ const document = useDocument(
 function log() {
   // console.log(document.doc.toJSON())
   // console.log(document.state.course.owner)
-  console.log(document.state.course.owner)
+  // console.log(document.state.course.owner)
   // console.log(document.state.course)
+
+  document.state.course.tags.reverse()
 }
 
 function update() {
@@ -85,7 +88,7 @@ function update() {
     id: `Person-${id}`,
     title: `Person ${id}`,
   }
-  document.state.course.sections.push({
+  document.state.course.sections.unshift({
     __typename: 'Section',
     id: `Section-${id}`,
     title: `Section ${id}`,
