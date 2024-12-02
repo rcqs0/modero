@@ -82,7 +82,7 @@ export default function useDocument<
     awareness = null
   })
 
-  return reactive({
+  return {
     doc,
     entities,
     state,
@@ -91,5 +91,5 @@ export default function useDocument<
     provider,
     awareness,
     collaborators,
-  })
+  }
 }
