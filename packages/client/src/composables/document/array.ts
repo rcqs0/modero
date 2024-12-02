@@ -261,7 +261,6 @@ export default function array<T>(
       const entities = receiver[ENTITIES_KEY]
 
       if (typeof key === 'number') {
-        console.log(key, value)
         transact(arr, () => {
           if (arr.doc) {
             const current = receiver[key]

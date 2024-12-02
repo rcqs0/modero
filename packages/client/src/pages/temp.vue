@@ -78,6 +78,7 @@ function log() {
 
   // document.state.course.tags.reverse()
   document.state.course.tags.splice(2, 0, 'x', 'y', 'z')
+  // document.state.course.tags.splice(2, 2)
 }
 
 function update() {
