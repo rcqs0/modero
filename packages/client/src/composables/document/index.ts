@@ -10,12 +10,12 @@ export default function useDocument<
   T extends Record<string, any[] | Record<any, any>>,
   C extends Record<string, any>,
 >(init: T, options?: { channel?: string; session?: Ref<C> }) {
+  const doc = new Y.Doc()
+
   const state = shallowRef<T>({} as T)
   const synced = ref(false)
   const initialized = ref(false)
   const error = ref<string | null>(null)
-
-  const doc = new Y.Doc()
 
   let provider: WebsocketProvider | null = null
   let awareness: Awareness | null = null
