@@ -2,14 +2,13 @@ import * as Y from 'yjs'
 import {
   YOBJECT_KEY,
   CACHE_KEY,
+  ENTITIES_KEY,
   proxify,
   convert,
   bind,
   transact,
   normalize,
 } from './utils'
-
-export const ENTITIES_KEY = Symbol('entities')
 
 // proxy cache
 const objects = new WeakMap<Y.Map<any>>()

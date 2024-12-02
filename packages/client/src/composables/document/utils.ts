@@ -13,6 +13,9 @@ export const YOBJECT_KEY = Symbol('yobject')
 // symbol key used to cache values destroyed instances
 export const CACHE_KEY = Symbol('cache')
 
+// symbol key used to store a reference to the entities proxy
+export const ENTITIES_KEY = Symbol('entities')
+
 // inspect a value, returning it's related yobject if available
 export function inspect(value: any) {
   if (typeof value === 'object' && value) {
