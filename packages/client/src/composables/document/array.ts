@@ -266,7 +266,7 @@ export default function array<T>(
             const current = receiver[key]
             const yobject = current?.[YOBJECT_KEY]
 
-            if (yobject) {
+            if (yobject && yobject.parent?.parent !== entities[YOBJECT_KEY]) {
               current[CACHE_KEY] = yobject.toJSON()
 
               if (yobject instanceof Y.Map) {
