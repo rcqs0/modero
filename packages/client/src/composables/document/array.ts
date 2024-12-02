@@ -209,11 +209,14 @@ export default function array<T>(
       }
 
       if (typeof key === 'number') {
+        console.log(key, value)
         transact(arr, () => {
           if (key < arr.length) {
             arr.delete(key, 1)
           }
           if (key > arr.length) {
+            // TODO: splice is the only(?) method that sets values higher than length - perhaps optimize with custom splice implementation
+            // doing the below is risky because it allows pulluting the array with null values
             arr.insert(
               arr.length,
               [...Array(key - arr.length).keys()].map(() => null) as any,
