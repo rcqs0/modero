@@ -261,6 +261,7 @@ export default function array<T>(
       const entities = receiver[ENTITIES_KEY]
 
       if (typeof key === 'number') {
+        console.log(key, value)
         transact(arr, () => {
           if (arr.doc) {
             const current = receiver[key]
@@ -281,6 +282,8 @@ export default function array<T>(
             arr.delete(key, 1)
           }
           if (key > arr.length) {
+            // TODO: splice is the only(?) method that sets values higher than length - perhaps optimize with custom splice implementation
+            // doing the below is risky because it allows pulluting the array with null values
             arr.insert(
               arr.length,
               [...Array(key - arr.length).keys()].map(() => null) as any,
