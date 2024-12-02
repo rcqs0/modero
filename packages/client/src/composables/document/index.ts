@@ -1,4 +1,4 @@
-import { onBeforeUnmount, Ref, ref, watch, reactive } from 'vue'
+import { onBeforeUnmount, Ref, ref, watch } from 'vue'
 import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket'
 import { Awareness } from 'y-protocols/awareness'
