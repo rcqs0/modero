@@ -51,7 +51,7 @@ export function normalize(input: any, entities: Y.Map<any>) {
     const instance = group.get(id)
 
     for (const [key, value] of Object.entries(data)) {
-      instance.set(key, value)
+      instance.set(key, convert(value))
     }
 
     return reference
@@ -71,20 +71,6 @@ export function denormalize(value: any, entities: Y.Map<any>) {
     }
 
     return object({}, value, entities)
-  }
-
-  if (
-    value &&
-    typeof value === 'object' &&
-    !(value instanceof Y.AbstractType)
-  ) {
-    if (entities && '__typename' in value && 'id' in value) {
-      const instance = entities.get(value['__typename'])?.get(value['id'])
-
-      if (instance) return instance
-    }
-
-    return value
   }
 
   return value

@@ -6,7 +6,7 @@
     </div>
     <div class="flex gap-4">
       <pre>{{ state }}</pre>
-      <!-- <pre>{{ entities }}</pre> -->
+      <pre>{{ entities }}</pre>
     </div>
   </div>
 </template>
@@ -18,31 +18,7 @@ import * as Y from 'yjs'
 
 const doc = new Y.Doc()
 
-// const entities = convert(
-//   {
-//     Person: {
-//       'Person-0': {
-//         __typename: 'Person',
-//         id: 'Person-0',
-//         title: 'Person 0',
-//       },
-//     },
-//     Course: {
-//       'Course-1': {
-//         __typename: 'Course',
-//         id: 'Course-1',
-//         title: 'Course 1',
-//         owner: {
-//           __typename: 'Person',
-//           id: 'Person-0',
-//         },
-//       },
-//     },
-//   },
-//   { type: doc.getMap('entities') },
-// )
-
-// const entities = object({}, doc.getMap('entities'))
+const entities = object({}, doc.getMap('entities'))
 
 const state = object(
   {
@@ -62,7 +38,7 @@ const state = object(
 )
 
 function log() {
-  // console.log(doc.getMap('entities').get('Course').get('Course-1').get('owner'))
+  console.log(state.course.owner === entities.Person['Person-0'])
   console.log({
     state: doc.getMap('state').toJSON(),
     entities: doc.getMap('entities').toJSON(),
