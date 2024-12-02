@@ -209,7 +209,6 @@ export default function array<T>(
       }
 
       if (typeof key === 'number') {
-        console.log(key, value)
         transact(arr, () => {
           if (key < arr.length) {
             arr.delete(key, 1)
