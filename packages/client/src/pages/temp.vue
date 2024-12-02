@@ -5,9 +5,9 @@
       <Button @click="update">Update</Button>
     </div>
     <div class="flex gap-4">
-      <pre>{{ document.state }}</pre>
-      <pre>{{ document.entities }}</pre>
-      <!-- <pre>{{ document.collaborators }}</pre> -->
+      <pre>{{ state }}</pre>
+      <pre>{{ entities }}</pre>
+      <pre>{{ collaborators }}</pre>
     </div>
   </div>
 </template>
@@ -16,28 +16,6 @@
 import _ from 'lodash'
 import useDocument from '@/composables/document'
 import { ref } from 'vue'
-import * as Y from 'yjs'
-
-const doc = new Y.Doc()
-const arr = doc.getArray('arr')
-arr.insert(0, [0, 1, 2, 3, 4, 5])
-
-function set(arr: Y.Array<any>, value: number) {
-  const length = arr.length
-  if (value < length) {
-    arr.delete(value, length - value)
-  } else if (value === length) {
-    arr.insert(length, [null])
-  } else {
-    arr.insert(
-      length,
-      [...Array(value - length).keys()].map(() => null),
-    )
-  }
-}
-
-set(arr, 8)
-// console.log(arr.toJSON())
 
 defineProps<{}>()
 
@@ -47,7 +25,7 @@ const session = ref({
   },
 })
 
-const document = useDocument(
+const { doc, state, entities, collaborators } = useDocument(
   {
     boss: {
       __typename: 'Person',
@@ -71,29 +49,29 @@ const document = useDocument(
 )
 
 function log() {
-  // console.log(document.doc.toJSON())
-  // console.log(document.state.course.owner)
-  // console.log(document.state.course.owner)
-  // console.log(document.state.course)
-
-  // document.state.course.tags.reverse()
-  document.state.course.tags.splice(2, 0, 'x', 'y', 'z')
-  // document.state.course.tags.splice(2, 2)
+  // console.log(doc.toJSON())
+  // console.log(state.course.owner)
+  // console.log(state.course.owner)
+  // console.log(state.course)
 }
 
 function update() {
-  // document.state.course.owner
   const id = _.uniqueId()
-  document.state.course.title = `Yaaaargh ${id}`
-  document.state.course.owner = {
+
+  state.course.title = `Yaaaargh ${id}`
+
+  state.course.owner = {
     __typename: 'Person',
     id: `Person-${id}`,
     title: `Person ${id}`,
   }
-  document.state.course.sections.unshift({
+
+  state.course.sections.unshift({
     __typename: 'Section',
     id: `Section-${id}`,
     title: `Section ${id}`,
   })
+
+  state.course.tags.reverse()
 }
 </script>
