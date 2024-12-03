@@ -14,11 +14,16 @@
 <script lang="ts" setup>
 import _ from 'lodash'
 import object from '@/composables/doc/object'
+import { YOBJECT_KEY, Entities } from '@/composables/doc/utils'
 import * as Y from 'yjs'
 
 const doc = new Y.Doc()
 
-const entities = object({}, doc.getMap('entities'))
+const entities = object<Entities>(
+  {},
+  doc.getMap('entities'),
+  doc.getMap('entities'),
+)
 
 const state = object(
   {
@@ -31,6 +36,13 @@ const state = object(
         id: 'Person-0',
         title: 'Person 0',
       },
+      sections: [
+        {
+          __typename: 'Section',
+          id: 'Section-0',
+          title: 'Section 0',
+        },
+      ],
     },
   },
   doc.getMap('state'),
@@ -53,5 +65,11 @@ function update() {
     id: `Person-${id}`,
     title: `Person ${id}`,
   }
+
+  state.course.sections.push({
+    __typename: 'Section',
+    id: `Section-${id}`,
+    title: `Section ${id}`,
+  })
 }
 </script>

@@ -1,13 +1,5 @@
 import * as Y from 'yjs'
-import {
-  YOBJECT_KEY,
-  proxify,
-  convert,
-  bind,
-  normalize,
-  denormalize,
-  transact,
-} from './utils'
+import { YOBJECT_KEY, proxify, convert, bind, transact } from './utils'
 
 // proxy cache
 const objects = new WeakMap<Y.Map<any>>()
@@ -16,7 +8,9 @@ export default function object<
   T extends Record<string, any> = Record<string, any>,
 >(init = {} as T, map = new Y.Map<any>(), entities?: Y.Map<any>) {
   // return cached proxy if available
-  if (objects.has(map)) return objects.get(map)
+  if (objects.has(map)) return objects.get(map) as T
+
+  convert(init, { type: map, entities })
 
   const track = bind(map, (event: Y.YMapEvent<any>, trigger, untrack) => {
     const added: string[] = []
@@ -61,8 +55,7 @@ export default function object<
 
       track(prop)
 
-      const input = map.get(prop)
-      return proxify(entities ? denormalize(input, entities) : input, entities)
+      return proxify(map.get(prop), entities)
     },
     set(target, prop, value, _receiver) {
       if (typeof prop === 'symbol') {
@@ -70,7 +63,7 @@ export default function object<
       }
 
       transact(map, () => {
-        map.set(prop, convert(entities ? normalize(value, entities) : value))
+        map.set(prop, convert(value, { entities }))
       })
 
       return true
@@ -102,11 +95,6 @@ export default function object<
       return Array.from(map.keys())
     },
   })
-
-  // initialize with provided values
-  for (let key in init) {
-    proxy[key] = init[key]
-  }
 
   // cache proxy before returning
   objects.set(map, proxy)
