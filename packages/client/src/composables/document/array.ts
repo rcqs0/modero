@@ -81,6 +81,76 @@ export default function array<T>(
         return arr.length
       }
 
+      // if (key === 'pop') {
+      //   return function () {
+      //     const index = arr.length - 1
+
+      //     const value = receiver[index]
+      //     arr.delete(index)
+
+      //     return value
+      //   }
+      // }
+
+      // if (key === 'push') {
+      //   return function () {
+      //     arr.push(Array.from(arguments).map(convert))
+
+      //     return arr.length
+      //   }
+      // }
+
+      // if (key === 'shift') {
+      //   return function () {
+      //     const value = receiver[0]
+      //     arr.delete(0)
+
+      //     return value
+      //   }
+      // }
+
+      // if (key === 'splice') {
+      //   return function () {
+      //     const length = arr.length
+
+      //     const start =
+      //       !arguments.length || arguments[0] < -length
+      //         ? 0
+      //         : arguments[0] > length
+      //         ? length
+      //         : arguments[0] < 0
+      //         ? length - Math.abs(arguments[0])
+      //         : arguments[0]
+      //     const deleteCount =
+      //       arguments.length === 1 || start + arguments[1] > length
+      //         ? length - start
+      //         : arguments[1] < 0
+      //         ? 0
+      //         : arguments[1]
+      //     const items = Array.from(arguments).slice(2)
+
+      //     const deleted: T[] = []
+      //     for (let i = start; i < start + deleteCount; i++) {
+      //       deleted.push(receiver[i])
+      //     }
+
+      //     transact(arr, () => {
+      //       arr.delete(start, deleteCount)
+      //       arr.insert(start, items.map(convert))
+      //     })
+
+      //     return deleted
+      //   }
+      // }
+
+      // if (key === 'unshift') {
+      //   return function () {
+      //     arr.unshift(Array.from(arguments).map(convert))
+
+      //     return arr.length
+      //   }
+      // }
+
       // wrap all mutating functions in a transaction
       if (
         key === 'copyWithin' ||
