@@ -19,6 +19,7 @@
     "@vue-flow/node-toolbar": "^1.1.0",
     "@vue/repl": "^4.4.2",
     "lodash": "^4.17.21",
+    "nanoid": "^5.0.9",
     "pinia": "^2.2.3",
     "primevue": "^4.2.1",
     "remixicon": "^4.5.0",

@@ -28,6 +28,7 @@ export default function useDocument<
     doc.transact(() => {
       Object.assign(state, init)
     })
+
     undoManager.clear()
     initialized.value = true
   }
