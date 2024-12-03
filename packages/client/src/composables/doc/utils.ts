@@ -1,5 +1,5 @@
 import object from './object'
-// import array from './array'
+import array from './array'
 import * as Y from 'yjs'
 import { shallowRef, triggerRef } from 'vue'
 
@@ -27,7 +27,7 @@ export function normalize(input: any, entities: Y.Map<any>) {
   if (!input || typeof input !== 'object' || !Object.keys(input).length)
     return input
 
-  const data = Object.assign({}, input)
+  const data = Array.isArray(input) ? [...input] : Object.assign({}, input)
 
   for (const [key, value] of Object.entries(data)) {
     data[key] = normalize(value, entities)
@@ -68,20 +68,49 @@ export function denormalize(value: any, entities: Y.Map<any>) {
 
 // resolve a value into a proxy, if available
 export function proxify(value: any, entities?: Y.Map<any>) {
+  if (value instanceof Y.Array) {
+    return array([], value, entities)
+  }
+
   if (value instanceof Y.Map) {
-    return object({}, value, entities)
+    const denormalized = entities ? denormalize(value, entities) : value
+    return object({}, denormalized, entities)
   }
 
   return value
 }
 
 // convert a value to a yobject, if the type is compatible
-export function convert(value: any) {
-  if (value && typeof value === 'object') {
-    return object(value)[YOBJECT_KEY]
+export function convert(
+  input: any,
+  options?: { type?: Y.AbstractType<any>; entities?: Y.Map<any> },
+) {
+  const type = options?.type
+  const entities = options?.entities
+
+  const normalized = entities ? normalize(input, entities) : input
+
+  if (Array.isArray(input)) {
+    if (type && !(type instanceof Y.Array)) throw new Error()
+
+    const arr = type || new Y.Array()
+    arr.insert(0, normalized.map(convert))
+
+    return arr
   }
 
-  return value
+  if (input && typeof input === 'object') {
+    if (type && !(type instanceof Y.Map)) throw new Error()
+
+    const map = type || new Y.Map()
+    for (const [key, value] of Object.entries(normalized)) {
+      map.set(key, convert(value))
+    }
+
+    return map
+  }
+
+  return input
 }
 
 // perform a transaction on the ydoc bound to the provided scope, if applicable
