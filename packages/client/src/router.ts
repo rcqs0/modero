@@ -71,10 +71,6 @@ const router = createRouter({
       component: () => import('./pages/zones.vue'),
     },
     {
-      path: '/temp',
-      component: () => import('./pages/temp.vue'),
-    },
-    {
       path: '/repl',
       component: () => import('./pages/repl.vue'),
     },
