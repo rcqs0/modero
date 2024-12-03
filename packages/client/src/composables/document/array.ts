@@ -1,14 +1,5 @@
 import * as Y from 'yjs'
-import {
-  YOBJECT_KEY,
-  CACHE_KEY,
-  ENTITIES_KEY,
-  proxify,
-  convert,
-  transact,
-  bind,
-  normalize,
-} from './utils'
+import { YOBJECT_KEY, proxify, convert, transact, bind } from './utils'
 
 // proxy cache
 const arrays = new WeakMap<Y.Array<any>>()
@@ -29,18 +20,12 @@ function toKey(prop: string | number | symbol) {
 export default function array<T>(
   init: T[] = [],
   arr = new Y.Array<T>(),
-  entities?: any,
+  entities?: Y.Map<any>,
 ) {
-  // if (init.length && arr.doc && arr.length) {
-  //   throw new Error("Can't provide initial values for a non-empty array.")
-  // }
-
   // return cached proxy if available
-  if (arrays.has(arr)) {
-    const existing = arrays.get(arr)
-    existing[ENTITIES_KEY] = entities
-    return existing
-  }
+  if (arrays.has(arr)) return arrays.get(arr) as T
+
+  convert(init, { type: arr, entities })
 
   const track = bind(arr, (event: Y.YArrayEvent<any>, trigger, untrack) => {
     const start = event.delta[0]?.retain || 0
@@ -80,11 +65,6 @@ export default function array<T>(
   // create new proxy
   const proxy = new Proxy(target as T[], {
     get(target, prop, receiver) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.get(cached, prop)
-      }
-
       const key = toKey(prop)
 
       if (typeof key === 'symbol') {
@@ -101,83 +81,12 @@ export default function array<T>(
         return arr.length
       }
 
-      // if (key === 'pop') {
-      //   return function () {
-      //     const index = arr.length - 1
-
-      //     const value = receiver[index]
-      //     arr.delete(index)
-
-      //     return value
-      //   }
-      // }
-
-      // if (key === 'push') {
-      //   return function () {
-      //     arr.push(Array.from(arguments).map(convert))
-
-      //     return arr.length
-      //   }
-      // }
-
-      // if (key === 'shift') {
-      //   return function () {
-      //     const value = receiver[0]
-      //     arr.delete(0)
-
-      //     return value
-      //   }
-      // }
-
-      // if (key === 'splice') {
-      //   return function () {
-      //     const length = arr.length
-
-      //     const start =
-      //       !arguments.length || arguments[0] < -length
-      //         ? 0
-      //         : arguments[0] > length
-      //         ? length
-      //         : arguments[0] < 0
-      //         ? length - Math.abs(arguments[0])
-      //         : arguments[0]
-      //     const deleteCount =
-      //       arguments.length === 1 || start + arguments[1] > length
-      //         ? length - start
-      //         : arguments[1] < 0
-      //         ? 0
-      //         : arguments[1]
-      //     const items = Array.from(arguments).slice(2)
-
-      //     const deleted: T[] = []
-      //     for (let i = start; i < start + deleteCount; i++) {
-      //       deleted.push(receiver[i])
-      //     }
-
-      //     transact(arr, () => {
-      //       arr.delete(start, deleteCount)
-      //       arr.insert(start, items.map(convert))
-      //     })
-
-      //     return deleted
-      //   }
-      // }
-
-      // if (key === 'unshift') {
-      //   return function () {
-      //     arr.unshift(Array.from(arguments).map(convert))
-
-      //     return arr.length
-      //   }
-      // }
-
-      // wrap any other functions that perform multiple updates in a transaction
+      // wrap all mutating functions in a transaction
       if (
         key === 'copyWithin' ||
         key === 'fill' ||
         key === 'reverse' ||
         key === 'sort' ||
-        // poc
         key === 'pop' ||
         key === 'push' ||
         key === 'shift' ||
@@ -193,27 +102,8 @@ export default function array<T>(
         }
       }
 
-      const entities = receiver[ENTITIES_KEY]
-
       if (typeof key === 'number') {
         track(key)
-
-        const input = arr.get(key) as any
-
-        if (
-          entities &&
-          input instanceof Y.Map &&
-          input.has('__typename') &&
-          input.has('id')
-        ) {
-          const instance = entities[YOBJECT_KEY].get(
-            input.get('__typename'),
-          )?.get(input.get('id'))
-
-          if (instance) {
-            return proxify(instance, entities)
-          }
-        }
 
         return proxify(arr.get(key), entities)
       }
@@ -222,11 +112,6 @@ export default function array<T>(
     },
 
     has(target, prop) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.has(cached, prop)
-      }
-
       const key = toKey(prop)
 
       if (typeof key === 'number') {
@@ -236,12 +121,7 @@ export default function array<T>(
       return Reflect.has(target, prop)
     },
 
-    set(target, prop, value, receiver) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.set(cached, prop, value)
-      }
-
+    set(target, prop, value, _receiver) {
       const key = toKey(prop)
 
       if (typeof key === 'symbol') {
@@ -258,57 +138,31 @@ export default function array<T>(
         return true
       }
 
-      const entities = receiver[ENTITIES_KEY]
-
       if (typeof key === 'number') {
         transact(arr, () => {
-          if (arr.doc) {
-            const current = receiver[key]
-            const yobject = current?.[YOBJECT_KEY]
-
-            if (yobject && yobject.parent?.parent !== entities[YOBJECT_KEY]) {
-              current[CACHE_KEY] = yobject.toJSON()
-
-              if (yobject instanceof Y.Map) {
-                yobject.clear()
-              } else if (yobject instanceof Y.Array) {
-                yobject.delete(0, yobject.length)
-              }
-            }
-          }
-
           if (key < arr.length) {
             arr.delete(key, 1)
           }
+
+          // TODO: splice is the only(?) method that sets values higher than length - perhaps optimize with custom splice implementation
+          // doing the below is risky because it allows pulluting the array with null values
           if (key > arr.length) {
-            // TODO: splice is the only(?) method that sets values higher than length - perhaps optimize with custom splice implementation
-            // doing the below is risky because it allows pulluting the array with null values
             arr.insert(
               arr.length,
               [...Array(key - arr.length).keys()].map(() => null) as any,
             )
           }
 
-          if (entities) {
-            const { data } = normalize(value, entities)
-            arr.insert(key, [convert(data, entities)])
-          } else {
-            arr.insert(key, [convert(value)])
-          }
+          arr.insert(key, [convert(value, { entities })])
         })
 
         return true
       }
 
-      return Reflect.set(target, prop, value, receiver)
+      throw new Error(`Can't assign "${key}" to array.`)
     },
 
     deleteProperty(target, prop) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.deleteProperty(cached, prop)
-      }
-
       const key = toKey(prop)
 
       if (typeof key === 'symbol' || typeof key === 'string') {
@@ -320,12 +174,7 @@ export default function array<T>(
       return true
     },
 
-    getOwnPropertyDescriptor(target, prop) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.getOwnPropertyDescriptor(cached, prop)
-      }
-
+    getOwnPropertyDescriptor(_target, prop) {
       const key = toKey(prop)
 
       if (key === 'length') {
@@ -347,12 +196,7 @@ export default function array<T>(
       }
     },
 
-    ownKeys(target) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.ownKeys(cached)
-      }
-
+    ownKeys(_target) {
       track()
 
       const keys = ['length']
@@ -364,9 +208,6 @@ export default function array<T>(
       return keys
     },
   })
-
-  // initialize with provided values
-  arr.insert(0, init.map(convert))
 
   // cache proxy before returning
   arrays.set(arr, proxy)

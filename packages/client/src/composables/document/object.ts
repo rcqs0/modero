@@ -1,27 +1,16 @@
 import * as Y from 'yjs'
-import {
-  YOBJECT_KEY,
-  CACHE_KEY,
-  ENTITIES_KEY,
-  proxify,
-  convert,
-  bind,
-  transact,
-  normalize,
-} from './utils'
+import { YOBJECT_KEY, proxify, convert, bind, transact } from './utils'
 
 // proxy cache
 const objects = new WeakMap<Y.Map<any>>()
 
 export default function object<
   T extends Record<string, any> = Record<string, any>,
->(init = {} as T, map = new Y.Map<any>(), entities?: any) {
+>(init = {} as T, map = new Y.Map<any>(), entities?: Y.Map<any>) {
   // return cached proxy if available
-  if (objects.has(map)) {
-    const existing = objects.get(map)
-    existing[ENTITIES_KEY] = entities
-    return existing
-  }
+  if (objects.has(map)) return objects.get(map) as T
+
+  convert(init, { type: map, entities })
 
   const track = bind(map, (event: Y.YMapEvent<any>, trigger, untrack) => {
     const added: string[] = []
@@ -49,16 +38,11 @@ export default function object<
     deleted.forEach((key) => untrack(key))
   })
 
-  const target = {} as any
-  target[YOBJECT_KEY] = map
-  target[ENTITIES_KEY] = entities
-
   // create new proxy
-  const proxy = new Proxy(target as T, {
-    get(target, prop, receiver) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.get(cached, prop)
+  const proxy = new Proxy({} as T, {
+    get(target, prop, _receiver) {
+      if (prop === YOBJECT_KEY) {
+        return map
       }
 
       if (typeof prop === 'symbol') {
@@ -71,93 +55,33 @@ export default function object<
 
       track(prop)
 
-      const input = map.get(prop)
-      const entities = receiver[ENTITIES_KEY]
-
-      if (
-        entities &&
-        input instanceof Y.Map &&
-        input.has('__typename') &&
-        input.has('id')
-      ) {
-        // const instance = entities[input.get('__typename')]?.[input.get('id')]
-        const instance = entities[YOBJECT_KEY].get(
-          input.get('__typename'),
-        )?.get(input.get('id'))
-
-        if (instance) {
-          return proxify(instance, entities)
-        }
-      }
-
-      return proxify(input, entities)
+      return proxify(map.get(prop), entities)
     },
-    set(target, prop, value, receiver) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.set(cached, prop, value)
-      }
-
+    set(target, prop, value, _receiver) {
       if (typeof prop === 'symbol') {
         return Reflect.set(target, prop, value)
       }
 
-      const entities = receiver[ENTITIES_KEY]
-
       transact(map, () => {
-        if (map.doc) {
-          const current = receiver[prop]
-          const yobject = current?.[YOBJECT_KEY]
-
-          if (yobject && yobject.parent?.parent !== entities[YOBJECT_KEY]) {
-            current[CACHE_KEY] = yobject.toJSON()
-
-            if (yobject instanceof Y.Map) {
-              yobject.clear()
-            } else if (yobject instanceof Y.Array) {
-              yobject.delete(0, yobject.length)
-            }
-          }
-        }
-
-        if (entities) {
-          const { data } = normalize(value, entities)
-          map.set(prop, convert(data, entities))
-        } else {
-          map.set(prop, convert(value))
-        }
+        map.set(prop, convert(value, { entities }))
       })
+
       return true
     },
-    deleteProperty(target, prop) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.deleteProperty(cached, prop)
-      }
-
+    deleteProperty(_target, prop) {
       if (typeof prop !== 'string' || !map.has(prop)) return false
 
       map.delete(prop)
       return true
     },
-    has(target, prop) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.has(cached, prop)
-      }
-
+    has(_target, prop) {
       if (typeof prop !== 'string') return false
 
       track()
 
       return map.has(prop)
     },
-    getOwnPropertyDescriptor(target, prop) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.getOwnPropertyDescriptor(cached, prop)
-      }
-
+    getOwnPropertyDescriptor(_target, prop) {
       if (typeof prop !== 'string' || !map.has(prop)) return
 
       return {
@@ -165,22 +89,12 @@ export default function object<
         configurable: true,
       }
     },
-    ownKeys(target) {
-      const cached = Reflect.get(target, CACHE_KEY)
-      if (cached) {
-        return Reflect.ownKeys(cached)
-      }
-
+    ownKeys(_target) {
       track()
 
       return Array.from(map.keys())
     },
   })
-
-  // initialize with provided values
-  for (let key in init) {
-    proxy[key] = init[key]
-  }
 
   // cache proxy before returning
   objects.set(map, proxy)

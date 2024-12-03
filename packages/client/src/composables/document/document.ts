@@ -3,8 +3,6 @@ import object from './object'
 import array from './array'
 import { YOBJECT_KEY, proxify } from './utils'
 
-export { inspect, transact } from './utils'
-
 export default function document<
   T extends Record<string, any[] | Record<any, any>>,
 >(init: T, doc = new Y.Doc()) {
@@ -21,7 +19,6 @@ export default function document<
         doc.getMap(key)
       } else {
         object(value, doc.getMap(key))
-        console.log('THIS')
       }
     }
   }

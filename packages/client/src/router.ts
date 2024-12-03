@@ -8,20 +8,12 @@ const router = createRouter({
       component: () => import('./pages/index.vue'),
     },
     {
-      path: '/repo',
-      component: () => import('./pages/repo.vue'),
-    },
-    {
       path: '/diagram',
       component: () => import('./pages/diagram.vue'),
     },
     {
       path: '/zones',
       component: () => import('./pages/zones.vue'),
-    },
-    {
-      path: '/temp',
-      component: () => import('./pages/temp.vue'),
     },
     {
       path: '/repl',

@@ -3,6 +3,8 @@
     <div class="flex gap-2">
       <Button @click="log">Log</Button>
       <Button @click="update">Update</Button>
+      <Button @click="undo">Undo</Button>
+      <Button @click="redo">Redo</Button>
     </div>
     <div class="flex gap-4">
       <pre>{{ state }}</pre>
@@ -12,20 +14,17 @@
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue'
+import useDocument from '@/composables/document'
 import _ from 'lodash'
-import object from '@/composables/doc/object'
-import { YOBJECT_KEY, Entities } from '@/composables/doc/utils'
-import * as Y from 'yjs'
 
-const doc = new Y.Doc()
+const session = ref({
+  user: {
+    email: 'rcq.snel@gmail.com',
+  },
+})
 
-const entities = object<Entities>(
-  {},
-  doc.getMap('entities'),
-  doc.getMap('entities'),
-)
-
-const state = object(
+const { doc, state, entities, undo, redo, transact } = useDocument(
   {
     course: {
       __typename: 'Course',
@@ -45,8 +44,7 @@ const state = object(
       ],
     },
   },
-  doc.getMap('state'),
-  doc.getMap('entities'),
+  { channel: 'Course-1', session },
 )
 
 function log() {
@@ -60,16 +58,18 @@ function log() {
 function update() {
   const id = _.uniqueId()
 
-  state.course.owner = {
-    __typename: 'Person',
-    id: `Person-${id}`,
-    title: `Person ${id}`,
-  }
+  transact(() => {
+    state.course.owner = {
+      __typename: 'Person',
+      id: `Person-${id}`,
+      title: `Person ${id}`,
+    }
 
-  state.course.sections.push({
-    __typename: 'Section',
-    id: `Section-${id}`,
-    title: `Section ${id}`,
+    state.course.sections.push({
+      __typename: 'Section',
+      id: `Section-${id}`,
+      title: `Section ${id}`,
+    })
   })
 }
 </script>

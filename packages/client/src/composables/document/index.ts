@@ -5,19 +5,44 @@ import { Awareness } from 'y-protocols/awareness'
 import object from './object'
 import { Entities } from './utils'
 
-export { inspect, transact } from './utils'
-
 export default function useDocument<
   T extends Record<string, any[] | Record<any, any>>,
   C extends Record<string, any>,
 >(init: T, options?: { channel?: string; session?: Ref<C> }) {
   const doc = new Y.Doc()
-  const entities = object({} as Entities, doc.getMap('entities'))
-  const state = object({} as T, doc.getMap('state'), entities)
+  const stateMap = doc.getMap('state')
+  const entitiesMap = doc.getMap('entities')
 
-  const synced = ref(false)
+  const state = object({} as T, stateMap, entitiesMap)
+  const entities = object({} as Entities, entitiesMap, entitiesMap)
+
+  const undoManager = new Y.UndoManager([stateMap, entitiesMap], {
+    captureTimeout: 0,
+  })
+
   const initialized = ref(false)
+  const synced = ref(false)
   const error = ref<string | null>(null)
+
+  function initialize() {
+    doc.transact(() => {
+      Object.assign(state, init)
+    })
+    undoManager.clear()
+    initialized.value = true
+  }
+
+  function transact<T>(f: (transaction: Y.Transaction) => T): T {
+    return doc.transact(f)
+  }
+
+  function undo() {
+    undoManager.undo()
+  }
+
+  function redo() {
+    undoManager.redo()
+  }
 
   let provider: WebsocketProvider | null = null
   let awareness: Awareness | null = null
@@ -39,7 +64,7 @@ export default function useDocument<
     provider.on('sync', (event: boolean) => {
       if (event) {
         if (!Object.keys(state).length) {
-          Object.assign(state, init)
+          initialize()
         }
         synced.value = true
         initialized.value = true
@@ -54,8 +79,7 @@ export default function useDocument<
       collaborators.value = Array.from(awareness!.getStates().values()) as C[]
     })
   } else {
-    Object.assign(state, init)
-    initialized.value = true
+    initialize()
   }
 
   if (options?.session) {
@@ -86,6 +110,9 @@ export default function useDocument<
     doc,
     entities,
     state,
+    transact,
+    undo,
+    redo,
     initialized,
     synced,
     provider,
