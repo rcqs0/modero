@@ -9,6 +9,7 @@
     <div class="flex gap-4">
       <pre>{{ state }}</pre>
       <pre>{{ entities }}</pre>
+      <pre>{{ collaborators }}</pre>
     </div>
   </div>
 </template>
@@ -21,31 +22,37 @@ import _ from 'lodash'
 const session = ref({
   user: {
     email: 'rcq.snel@gmail.com',
+    position: [0, 0],
   },
 })
 
-const { doc, state, entities, undo, redo, transact } = useDocument(
-  {
-    course: {
-      __typename: 'Course',
-      id: 'Course-1',
-      title: 'Course 1',
-      owner: {
-        __typename: 'Person',
-        id: 'Person-0',
-        title: 'Person 0',
-      },
-      sections: [
-        {
-          __typename: 'Section',
-          id: 'Section-0',
-          title: 'Section 0',
+window.addEventListener('mousemove', (event) => {
+  session.value.user.position = [event.clientX, event.clientY]
+})
+
+const { doc, state, entities, collaborators, undo, redo, transact } =
+  useDocument(
+    {
+      course: {
+        __typename: 'Course',
+        id: 'Course-1',
+        title: 'Course 1',
+        owner: {
+          __typename: 'Person',
+          id: 'Person-0',
+          title: 'Person 0',
         },
-      ],
+        sections: [
+          {
+            __typename: 'Section',
+            id: 'Section-0',
+            title: 'Section 0',
+          },
+        ],
+      },
     },
-  },
-  { channel: 'Course-1', session },
-)
+    { channel: 'Course-1', session },
+  )
 
 function log() {
   console.log(state.course.owner === entities.Person['Person-0'])
