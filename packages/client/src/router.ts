@@ -27,6 +27,41 @@ const router = createRouter({
       path: '/doc',
       component: () => import('./pages/doc.vue'),
     },
+    {
+      path: '/course',
+      component: () => import('./pages/course.vue'),
+    },
+    {
+      path: '/editor_',
+      component: () => import('./pages/editor_.vue'),
+    },
+    {
+      path: '/editor',
+      component: () => import('./pages/editor.vue'),
+      children: [
+        {
+          path: '',
+          component: () => import('./pages/editor/index.vue'),
+        },
+        {
+          path: 'course',
+          components: {
+            default: () => import('./pages/editor/course.vue'),
+            nav: () => import('./pages/editor/course/_nav.vue'),
+          },
+          children: [
+            {
+              path: '',
+              component: () => import('./pages/editor/course/index.vue'),
+            },
+            {
+              path: 'page',
+              component: () => import('./pages/editor/course/page.vue'),
+            },
+          ],
+        },
+      ],
+    },
   ],
 })
 

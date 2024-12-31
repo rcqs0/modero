@@ -11,6 +11,14 @@
       <pre>{{ entities }}</pre>
       <pre>{{ collaborators }}</pre>
     </div>
+    <div
+      v-for="session in collaborators"
+      class="w-8 h-8 bg-red-500 fixed"
+      :style="{
+        top: `${session.position.y}px`,
+        left: `${session.position.x}px`,
+      }"
+    />
   </div>
 </template>
 
@@ -22,12 +30,13 @@ import _ from 'lodash'
 const session = ref({
   user: {
     email: 'rcq.snel@gmail.com',
-    position: [0, 0],
   },
+  position: { x: 0, y: 0 },
 })
 
 window.addEventListener('mousemove', (event) => {
-  session.value.user.position = [event.clientX, event.clientY]
+  session.value.position.y = event.clientY
+  session.value.position.x = event.clientX
 })
 
 const { doc, state, entities, collaborators, undo, redo, transact } =
