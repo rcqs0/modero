@@ -6,7 +6,9 @@ import { ComponentResolver } from 'unplugin-vue-components'
 
 const primeVueComponents = [
   'Accordion',
-  'AccordionTab',
+  'AccordionPanel',
+  'AccordionHeader',
+  'AccordionContent',
   'AutoComplete',
   'Avatar',
   'AvatarGroup',
@@ -110,6 +112,7 @@ const primeVueComponents = [
   // 'Toast',
   // Toast must be registered globally in order for the toast service to work properly
   'ToggleButton',
+  'ToggleSwitch',
   'Toolbar',
   // 'Tooltip',
   // Tooltip must be registered globally in order for the tooltip service to work properly
