@@ -15,17 +15,17 @@ import { computed, inject, reactive } from 'vue'
 import _ from 'lodash'
 import { FORM_KEY } from './Form.vue'
 
-const props = defineProps<{ name: string; label?: string; error?: string }>()
+const props = defineProps<{ name?: string; label?: string; error?: string }>()
 
 const form = inject(FORM_KEY, undefined)
 
 const data = computed({
-  get: () => form && _.get(form.data, props.name),
-  set: (value) => form && _.set(form.data, props.name, value),
+  get: () => form && props.name && _.get(form.data, props.name),
+  set: (value) => form && props.name && _.set(form.data, props.name, value),
 })
 
 const label = computed(
-  () => props.label || form?.model?.fields[props.name]?.label,
+  () => props.label || (props.name && form?.model?.fields[props.name]?.label),
 )
 
 function onChange(event: any) {

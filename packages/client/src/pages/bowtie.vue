@@ -1,38 +1,119 @@
 <template>
   <Layout>
-    <BowtieDiagram :data="{ events, controls, causalities }" />
+    <BowtieDiagram
+      :data="{
+        uncertainty: uncertainties[0],
+        events,
+        controls,
+        causes,
+        effects,
+      }"
+    />
   </Layout>
 </template>
 
 <script lang="ts" setup>
-import { eventSchema, controlSchema, causalitySchema } from '@/schemas'
+import {
+  uncertaintySchema,
+  eventSchema,
+  controlSchema,
+  causeSchema,
+  effectSchema,
+} from '@/schemas'
+
+const uncertainties = [
+  uncertaintySchema.parse({
+    label: 'Dropped object during lifting operations',
+  }),
+]
 
 const events = [
-  eventSchema.parse({ label: 'Event 1' }),
-  eventSchema.parse({ label: 'Event 2' }),
-  eventSchema.parse({ label: 'Event 3' }),
-  eventSchema.parse({ label: 'Event 4' }),
-  eventSchema.parse({ label: 'Event 5' }),
+  eventSchema.parse({ label: 'Structural failure of crane' }),
+  eventSchema.parse({ label: 'Load too heavy' }),
+  eventSchema.parse({ label: 'Incorrect loading / rigging' }),
+  eventSchema.parse({ label: 'Strong winds' }),
+  eventSchema.parse({ label: 'Snagging of gear / load' }),
+  eventSchema.parse({ label: 'Operator overextends load' }),
+  eventSchema.parse({ label: 'Personnel hit by object' }),
+  eventSchema.parse({ label: 'Object dropped in sea' }),
+  eventSchema.parse({ label: 'Object impacts ground' }),
+  eventSchema.parse({ label: 'Object impacts live equipment' }),
 ]
 
 const controls = [
-  controlSchema.parse({ label: 'Control 1' }),
-  controlSchema.parse({ label: 'Control 2' }),
-  controlSchema.parse({ label: 'Control 3' }),
+  controlSchema.parse({ label: 'Check inspection of status of crane' }),
+  controlSchema.parse({ label: 'Pre-lift crane check' }),
+  controlSchema.parse({ label: 'Overload protection' }),
+  controlSchema.parse({ label: 'Check safe working load manifest' }),
+  controlSchema.parse({ label: 'Limited lift stability check' }),
+  controlSchema.parse({
+    label: 'Monitor and adhere to weather criteria - stop lift if exceeded',
+  }),
+  controlSchema.parse({ label: 'Use lifting plan' }),
+  controlSchema.parse({ label: 'Use a banksman for blind lifts' }),
+  controlSchema.parse({
+    label: 'Use camera / CCTV monitoring for blind angles',
+  }),
+  controlSchema.parse({
+    label: 'Check that crane operator is competent for the lift',
+  }),
+  controlSchema.parse({ label: 'Use camera / CCTV monitoring' }),
+  controlSchema.parse({ label: 'PA warnings' }),
+  controlSchema.parse({ label: 'Restrict access to lifting area' }),
+  controlSchema.parse({ label: 'Use lifting plan' }),
+  controlSchema.parse({ label: 'Use lifting plan' }),
+  controlSchema.parse({ label: 'Isolate vulnerable equipment' }),
 ]
 
-const causalities = [
-  causalitySchema.parse({
-    cause: events[0],
-    effect: events[2],
-    controls: [controls[0]],
+const causes = [
+  causeSchema.parse({
+    event: events[0],
+    uncertainty: uncertainties[0],
+    controls: [controls[0], controls[1]],
   }),
-  causalitySchema.parse({ cause: events[1], effect: events[2] }),
-  causalitySchema.parse({ cause: events[2], effect: events[3] }),
-  causalitySchema.parse({
-    cause: events[2],
-    effect: events[4],
-    controls: [controls[1], controls[2]],
+  causeSchema.parse({
+    event: events[1],
+    uncertainty: uncertainties[0],
+    controls: [controls[2], controls[3]],
+  }),
+  causeSchema.parse({
+    event: events[2],
+    uncertainty: uncertainties[0],
+    controls: [controls[4]],
+  }),
+  causeSchema.parse({
+    event: events[3],
+    uncertainty: uncertainties[0],
+    controls: [controls[5]],
+  }),
+  causeSchema.parse({
+    event: events[4],
+    uncertainty: uncertainties[0],
+    controls: [controls[6], controls[7], controls[8]],
+  }),
+  causeSchema.parse({
+    event: events[5],
+    uncertainty: uncertainties[0],
+    controls: [controls[9], controls[10]],
+  }),
+]
+
+const effects = [
+  effectSchema.parse({
+    uncertainty: uncertainties[0],
+    event: events[6],
+    controls: [controls[11], controls[12]],
+  }),
+  effectSchema.parse({
+    uncertainty: uncertainties[0],
+    event: events[7],
+    controls: [controls[13]],
+  }),
+  effectSchema.parse({ uncertainty: uncertainties[0], event: events[8] }),
+  effectSchema.parse({
+    uncertainty: uncertainties[0],
+    event: events[9],
+    controls: [controls[14], controls[15]],
   }),
 ]
 </script>

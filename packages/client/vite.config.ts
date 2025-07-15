@@ -89,7 +89,7 @@ const primeVueComponents = [
   'SelectButton',
   'Sidebar',
   'Skeleton',
-  'Slider',
+  // 'Slider',
   'SpeedDial',
   'SplitButton',
   'Splitter',

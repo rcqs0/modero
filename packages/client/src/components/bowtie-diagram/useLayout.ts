@@ -1,6 +1,11 @@
+import _ from 'lodash'
 import dagre from '@dagrejs/dagre'
 import { Position, useVueFlow, type Node, type Edge } from '@vue-flow/core'
 import { ref } from 'vue'
+
+const RANK_SEP = 50
+const NODE_SEP = RANK_SEP
+const EDGE_SEP = RANK_SEP / 2
 
 /**
  * Composable to run the layout algorithm on the graph.
@@ -22,7 +27,12 @@ export function useLayout() {
     dagreGraph.setDefaultEdgeLabel(() => ({}))
 
     const isHorizontal = direction === 'LR'
-    dagreGraph.setGraph({ rankdir: direction })
+    dagreGraph.setGraph({
+      rankdir: direction,
+      ranksep: RANK_SEP,
+      nodesep: NODE_SEP,
+      edgesep: EDGE_SEP,
+    })
 
     previousDirection.value = direction
 
@@ -43,16 +53,43 @@ export function useLayout() {
     }
 
     dagre.layout(dagreGraph)
+    const dagreNodes = nodes.map((node) => graph.value.node(node.id))
+
+    // if (isHorizontal) {
+    //   const ranks = _.uniq(dagreNodes.map((dagreNode) => dagreNode.rank)).sort(
+    //     (a, b) => a! - b!,
+    //   )
+
+    //   ranks.forEach((rank) => {
+    //     const nodesInRank = dagreNodes
+    //       .filter((dagreNode) => dagreNode.rank === rank)
+    //       .sort((a, b) => a.y - b.y)
+
+    //     nodesInRank.forEach((dagreNode, i) => {
+    //       const nextNodeInRank = nodesInRank[i + 1]
+
+    //       if (nextNodeInRank) {
+    //         const ySep = nextNodeInRank.y - (dagreNode.y + dagreNode.height)
+
+    //         if (ySep < NODE_SEP) {
+    //           nodesInRank.slice(i + 1).forEach((dagreNode) => {
+    //             dagreNode.y += NODE_SEP - ySep
+    //           })
+    //         }
+    //       }
+    //     })
+    //   })
+    // }
 
     // set nodes with updated positions
-    return nodes.map((node) => {
-      const nodeWithPosition = dagreGraph.node(node.id)
+    return nodes.map((node, i) => {
+      const dagreNode = dagreNodes[i]
 
       return {
         ...node,
         targetPosition: isHorizontal ? Position.Left : Position.Top,
         sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
-        position: { x: nodeWithPosition.x, y: nodeWithPosition.y },
+        position: { x: dagreNode.x, y: dagreNode.y },
       }
     })
   }
