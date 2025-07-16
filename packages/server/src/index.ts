@@ -6,12 +6,12 @@ import { PrismaClient } from '@prisma/client'
 import { createServer } from 'http'
 import { WebSocketServer } from 'ws'
 import { connect } from './sync'
-import Anthropic from '@anthropic-ai/sdk'
+// import Anthropic from '@anthropic-ai/sdk'
 
-const anthropic = new Anthropic({
-  apiKey:
-    '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', // defaults to process.env["ANTHROPIC_API_KEY"]
-})
+// const anthropic = new Anthropic({
+//   apiKey:
+//     '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', // defaults to process.env["ANTHROPIC_API_KEY"]
+// })
 
 const prisma = new PrismaClient()
 
@@ -33,17 +33,17 @@ const appRouter = t.router({
     return controls
   }),
 
-  chat: publicProcedure.query(async () => {
-    const msg = await anthropic.messages.create({
-      model: 'claude-3-7-sonnet-20250219',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: 'Hello, Claude' }],
-    })
+  // chat: publicProcedure.query(async () => {
+  //   const msg = await anthropic.messages.create({
+  //     model: 'claude-3-7-sonnet-20250219',
+  //     max_tokens: 1024,
+  //     messages: [{ role: 'user', content: 'Hello, Claude' }],
+  //   })
 
-    console.log(msg)
+  //   console.log(msg)
 
-    return { ok: true }
-  }),
+  //   return { ok: true }
+  // }),
 })
 
 const app = express()
