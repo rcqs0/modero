@@ -13,6 +13,7 @@
 </template>
 
 <script lang="ts" setup>
+import _ from 'lodash'
 import {
   uncertaintySchema,
   eventSchema,
@@ -41,28 +42,70 @@ const events = [
 ]
 
 const controls = [
-  controlSchema.parse({ label: 'Check inspection of status of crane' }),
-  controlSchema.parse({ label: 'Pre-lift crane check' }),
-  controlSchema.parse({ label: 'Overload protection' }),
-  controlSchema.parse({ label: 'Check safe working load manifest' }),
-  controlSchema.parse({ label: 'Limited lift stability check' }),
   controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Check inspection of status of crane',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Pre-lift crane check',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Overload protection',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Check safe working load manifest',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Limited lift stability check',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
     label: 'Monitor and adhere to weather criteria - stop lift if exceeded',
   }),
-  controlSchema.parse({ label: 'Use lifting plan' }),
-  controlSchema.parse({ label: 'Use a banksman for blind lifts' }),
   controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Use lifting plan',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Use a banksman for blind lifts',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
     label: 'Use camera / CCTV monitoring for blind angles',
   }),
   controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
     label: 'Check that crane operator is competent for the lift',
   }),
-  controlSchema.parse({ label: 'Use camera / CCTV monitoring' }),
-  controlSchema.parse({ label: 'PA warnings' }),
-  controlSchema.parse({ label: 'Restrict access to lifting area' }),
-  controlSchema.parse({ label: 'Use lifting plan' }),
-  controlSchema.parse({ label: 'Use lifting plan' }),
-  controlSchema.parse({ label: 'Isolate vulnerable equipment' }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Use camera / CCTV monitoring',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'PA warnings',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Restrict access to lifting area',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Use lifting plan',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Use lifting plan',
+  }),
+  controlSchema.parse({
+    effectiveness: _.random(0, 1, true),
+    label: 'Isolate vulnerable equipment',
+  }),
 ]
 
 const causes = [

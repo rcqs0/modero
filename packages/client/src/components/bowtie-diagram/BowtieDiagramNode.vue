@@ -17,7 +17,7 @@
 
     <div
       v-if="type === 'Uncertainty'"
-      class="flex-grow relative h-[12px] flex-shrink-0 border-b-2 shadow-inner shadow-current text-cyan-500 bg-cyan-200 border-current rounded-t-md"
+      class="flex-grow relative h-[12px] flex-shrink-0 border-b-2 shadow-inner stroke-current shadow-current text-cyan-500 bg-cyan-200 border-current rounded-t-md"
     >
       <svg
         class="absolute top-0 left-0 h-full w-full rounded-t-md"
@@ -30,13 +30,7 @@
           patternTransform="rotate(-45 0 0)"
           patternUnits="userSpaceOnUse"
         >
-          <line
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="10"
-            style="stroke: currentColor; stroke-width: 8"
-          />
+          <line x1="0" y1="0" x2="0" y2="10" style="stroke-width: 8" />
         </pattern>
         <rect fill="url(#diagonalHatch2)" width="100%" height="100%" />
       </svg>
@@ -44,28 +38,34 @@
     <div class="flex">
       <div
         v-if="type === 'Control'"
-        class="relative w-[8px] flex-shrink-0 border-r-2 shadow-inner shadow-current text-amber-500 bg-amber-200 border-current rounded-l-md"
+        class="relative w-[8px] flex-shrink-0 border-r-2 shadow-inner shadow-current border-current rounded-l-md"
+        :style="{
+          color: colorInterpolator(node.data.effectiveness),
+          backgroundColor: bgColorInterpolator(node.data.effectiveness),
+        }"
       >
         <svg
           class="absolute top-0 left-0 h-full w-full rounded-l-md"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <pattern
-            id="diagonalHatch"
-            width="8"
-            height="10"
-            patternTransform="rotate(-45 0 0)"
-            patternUnits="userSpaceOnUse"
-          >
-            <line
-              x1="0"
-              y1="0"
-              x2="0"
-              y2="10"
-              style="stroke: currentColor; stroke-width: 8"
-            />
-          </pattern>
-          <rect fill="url(#diagonalHatch)" width="100%" height="100%" />
+          <defs>
+            <pattern
+              :id="node.data.id"
+              width="8"
+              height="10"
+              patternTransform="rotate(-45 0 0)"
+              patternUnits="userSpaceOnUse"
+            >
+              <line
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="10"
+                style="stroke: currentColor; stroke-width: 8"
+              />
+            </pattern>
+          </defs>
+          <rect :fill="`url(#${node.data.id})`" width="100%" height="100%" />
         </svg>
       </div>
       <div
@@ -90,6 +90,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { Handle, type GraphNode } from '@vue-flow/core'
+import { piecewise, interpolate } from 'd3-interpolate'
 // import { NodeToolbar } from '@vue-flow/node-toolbar'
 
 const props = defineProps<{ node: GraphNode }>()
@@ -126,6 +127,17 @@ const handleStyles = computed(() => {
     top: type.value !== 'Uncertainty' ? '1.286rem' : undefined,
   }
 })
+
+const colorInterpolator = piecewise(interpolate, [
+  '#fb2c36',
+  '#fd9a00',
+  '#00c951',
+])
+const bgColorInterpolator = piecewise(interpolate, [
+  '#ffc9c9',
+  '#fee685',
+  '#b9f8cf',
+])
 </script>
 
 <style lang="postcss" scoped>
