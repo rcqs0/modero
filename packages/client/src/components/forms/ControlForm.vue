@@ -10,7 +10,7 @@
       <div class="flex items-center gap-6">
         <Slider
           v-model="data.effectiveness"
-          :color="['#ef4444', '#eab308', '#22c55e']"
+          :color="['#fb2c36', '#fd9a00', '#00c951']"
           class="flex-grow"
         />
         <InputNumber v-model="data.effectiveness" class="w-16" fluid />

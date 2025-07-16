@@ -8,32 +8,38 @@
     @nodes-initialized="layoutGraph"
   >
     <template #node-default="node">
-      <BowtieDiagramNode :node="node" />
+      <BowtieDiagramNode
+        :node="node"
+        :selected="selected === node.id"
+        @add-effect="addEffect"
+        @add-cause="addCause"
+        @add-control="addControl"
+      />
     </template>
 
     <Panel
-      v-if="selected"
+      v-if="selectedNode"
       position="top-right"
       class="p-6 w-96 shadow rounded-md bg-white flex flex-col gap-6"
     >
       <div class="text-xl font-bold">
-        {{ selected.data.label ?? selected.data.event?.label }}
+        {{ selectedNode.data.label ?? selectedNode.data.event?.label }}
       </div>
       <UncertaintyForm
-        v-if="selected.data.__typename === 'Uncertainty'"
-        :data="selected.data"
+        v-if="selectedNode.data.__typename === 'Uncertainty'"
+        :data="selectedNode.data"
       />
       <CauseForm
-        v-if="selected.data.__typename === 'Cause'"
-        :data="selected.data"
+        v-if="selectedNode.data.__typename === 'Cause'"
+        :data="selectedNode.data"
       />
       <EffectForm
-        v-if="selected.data.__typename === 'Effect'"
-        :data="selected.data"
+        v-if="selectedNode.data.__typename === 'Effect'"
+        :data="selectedNode.data"
       />
       <ControlForm
-        v-if="selected.data.__typename === 'Control'"
-        :data="selected.data"
+        v-if="selectedNode.data.__typename === 'Control'"
+        :data="selectedNode.data"
       />
     </Panel>
   </Diagram>
@@ -48,6 +54,9 @@ import {
   type Control,
   type Cause,
   type Effect,
+  effectSchema,
+  causeSchema,
+  controlSchema,
 } from '@/schemas'
 import { useLayout } from './useLayout'
 
@@ -55,15 +64,15 @@ type Instance = Uncertainty | Control | Cause | Effect
 
 const props = defineProps<{
   data: {
-    uncertainty: Uncertainty
-    events?: Event[]
-    controls?: Control[]
-    causes?: Cause[]
-    effects?: Effect[]
+    uncertainties: Uncertainty[]
+    events: Event[]
+    controls: Control[]
+    causes: Cause[]
+    effects: Effect[]
   }
 }>()
 
-const { fitView, zoomTo, getSelectedNodes } = useVueFlow()
+const { fitView, zoomTo, onNodeClick, onPaneClick, findNode } = useVueFlow()
 // setInteractive(false)
 const { layout } = useLayout()
 
@@ -87,71 +96,115 @@ function addEdge(source: Instance, target: Instance) {
   })
 }
 
-watch(
-  () => props.data,
-  () => {
-    nodes.value = []
-    edges.value = []
+function build() {
+  nodes.value = []
+  edges.value = []
 
-    addNode(props.data.uncertainty)
+  props.data.uncertainties.forEach((uncertainty) => {
+    addNode(uncertainty)
+  })
 
-    props.data.controls?.forEach((control) => {
-      addNode(control)
-    })
+  props.data.controls?.forEach((control) => {
+    addNode(control)
+  })
 
-    props.data.causes?.forEach((cause) => {
-      addNode(cause)
-    })
+  props.data.causes?.forEach((cause) => {
+    addNode(cause)
+  })
 
-    props.data.effects?.forEach((effect) => {
-      addNode(effect)
-    })
+  props.data.effects?.forEach((effect) => {
+    addNode(effect)
+  })
 
-    props.data.causes?.forEach((cause) => {
-      if (cause.controls.length) {
-        const first = cause.controls[0]
-        addEdge(cause, first)
+  props.data.causes?.forEach((cause) => {
+    if (cause.controls.length) {
+      const first = cause.controls[0]
+      addEdge(cause, first)
 
-        cause.controls.slice(1).forEach((control, i) => {
-          const previous = cause.controls[i]
-          addEdge(previous, control)
-        })
+      cause.controls.slice(1).forEach((control, i) => {
+        const previous = cause.controls[i]
+        addEdge(previous, control)
+      })
 
-        const last = cause.controls[cause.controls.length - 1]
-        addEdge(last, cause.uncertainty)
-      } else {
-        addEdge(cause, cause.uncertainty)
-      }
-    })
+      const last = cause.controls[cause.controls.length - 1]
+      addEdge(last, cause.uncertainty)
+    } else {
+      addEdge(cause, cause.uncertainty)
+    }
+  })
 
-    props.data.effects?.forEach((effect) => {
-      if (effect.controls.length) {
-        const first = effect.controls[0]
-        addEdge(effect.uncertainty, first)
+  props.data.effects?.forEach((effect) => {
+    if (effect.controls.length) {
+      const first = effect.controls[0]
+      addEdge(effect.uncertainty, first)
 
-        effect.controls.slice(1).forEach((control, i) => {
-          const previous = effect.controls[i]
-          addEdge(previous, control)
-        })
+      effect.controls.slice(1).forEach((control, i) => {
+        const previous = effect.controls[i]
+        addEdge(previous, control)
+      })
 
-        const last = effect.controls[effect.controls.length - 1]
-        addEdge(last, effect)
-      } else {
-        addEdge(effect.uncertainty, effect)
-      }
-    })
-  },
-  { immediate: true },
-)
+      const last = effect.controls[effect.controls.length - 1]
+      addEdge(last, effect)
+    } else {
+      addEdge(effect.uncertainty, effect)
+    }
+  })
+}
+
+watch(() => props.data, build, { immediate: true })
 
 function layoutGraph() {
   nodes.value = layout(nodes.value, edges.value, 'LR')
 
-  nextTick(() => {
-    fitView()
-    zoomTo(1)
-  })
+  if (!selected.value) {
+    nextTick(() => {
+      fitView()
+      zoomTo(1)
+    })
+  }
 }
 
-const selected = computed(() => getSelectedNodes.value[0])
+const selected = ref<string>()
+const selectedNode = computed(() => findNode(selected.value))
+
+onNodeClick(({ node }) => {
+  selected.value = node.id
+})
+
+onPaneClick(() => {
+  selected.value = undefined
+})
+
+function addEffect(uncertainty: Uncertainty) {
+  const effect = effectSchema.parse({
+    uncertainty,
+    event: { label: 'Event' },
+  })
+  props.data.effects.push(effect)
+  selected.value = effect.id
+
+  build()
+}
+
+function addCause(uncertainty: Uncertainty) {
+  const cause = causeSchema.parse({
+    uncertainty,
+    event: { label: 'Event' },
+  })
+  props.data.causes.push(cause)
+  selected.value = cause.id
+
+  build()
+}
+
+function addControl(source: Cause | Effect) {
+  const control = controlSchema.parse({
+    label: 'Control',
+  })
+  props.data.controls.push(control)
+  source.controls.push(control)
+  selected.value = control.id
+
+  build()
+}
 </script>

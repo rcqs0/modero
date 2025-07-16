@@ -10,7 +10,9 @@
 </template>
 
 <script lang="ts" setup>
-import { type Effect } from '@/schemas'
+// import { type Effect } from '@/schemas'
 
-defineProps<{ data: Effect }>()
+withDefaults(defineProps<{ data?: Record<string, any> }>(), {
+  data: () => ({}),
+})
 </script>

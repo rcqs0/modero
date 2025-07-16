@@ -2,7 +2,7 @@
   <Layout>
     <BowtieDiagram
       :data="{
-        uncertainty: uncertainties[0],
+        uncertainties,
         events,
         controls,
         causes,
@@ -24,8 +24,11 @@ import {
 
 const uncertainties = [
   uncertaintySchema.parse({
-    label: 'Dropped object during lifting operations',
+    label: 'Lifting operations / Dropped object',
   }),
+  // uncertaintySchema.parse({
+  //   label: 'Confined space entry / Unsafe atmosphere',
+  // }),
 ]
 
 const events = [

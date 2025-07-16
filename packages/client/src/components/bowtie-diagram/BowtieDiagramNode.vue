@@ -1,5 +1,8 @@
 <template>
-  <div class="w-full flex flex-col text-left rounded-md" :class="classes">
+  <div
+    class="w-full flex flex-col text-left rounded-md shadow-sm border border-surface-300"
+    :class="{ 'ring-4 ring-black border-black': selected }"
+  >
     <Handle
       v-if="type !== 'Effect'"
       type="source"
@@ -81,19 +84,76 @@
       />
     </div>
 
-    <!-- <NodeToolbar class="flex gap-2" :is-visible="true">
-        <span>A</span><span>B</span><span>C</span>
-      </NodeToolbar> -->
+    <template v-if="selected">
+      <template v-if="type === 'Uncertainty'">
+        <NodeToolbar
+          class="flex gap-2 ml-1"
+          :position="Position.Left"
+          :is-visible="true"
+        >
+          <Button
+            rounded
+            icon="ri-add-line"
+            severity="contrast"
+            class="scale-75"
+            @click="$emit('addCause', node.data)"
+          />
+        </NodeToolbar>
+        <NodeToolbar
+          class="flex gap-2 -ml-1"
+          :position="Position.Right"
+          :is-visible="true"
+        >
+          <Button
+            rounded
+            icon="ri-add-line"
+            severity="contrast"
+            class="scale-75"
+            @click="$emit('addEffect', node.data)"
+          />
+        </NodeToolbar>
+      </template>
+      <template v-else-if="type === 'Cause'">
+        <NodeToolbar
+          class="flex gap-2 -ml-1"
+          :position="Position.Right"
+          :is-visible="true"
+        >
+          <Button
+            rounded
+            icon="ri-add-line"
+            severity="contrast"
+            class="scale-75"
+            @click="$emit('addControl', node.data)"
+          />
+        </NodeToolbar>
+      </template>
+      <template v-else-if="type === 'Effect'">
+        <NodeToolbar
+          class="flex gap-2 ml-1"
+          :position="Position.Left"
+          :is-visible="true"
+        >
+          <Button
+            rounded
+            icon="ri-add-line"
+            severity="contrast"
+            class="scale-75"
+            @click="$emit('addControl', node.data)"
+          />
+        </NodeToolbar>
+      </template>
+    </template>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { computed } from 'vue'
-import { Handle, type GraphNode } from '@vue-flow/core'
+import { Handle, Position, type GraphNode } from '@vue-flow/core'
 import { piecewise, interpolate } from 'd3-interpolate'
-// import { NodeToolbar } from '@vue-flow/node-toolbar'
+import { NodeToolbar } from '@vue-flow/node-toolbar'
 
-const props = defineProps<{ node: GraphNode }>()
+const props = defineProps<{ node: GraphNode; selected?: boolean }>()
 
 const type = computed(() => props.node.data.__typename)
 
@@ -103,23 +163,6 @@ const label = computed(() => {
   }
 
   return props.node.data.label
-})
-
-const classes = computed(() => {
-  switch (type.value) {
-    case 'Cause': {
-      return // 'border-r-8 border-fuchsia-500'
-    }
-    case 'Effect': {
-      return // 'border-l-8 border-fuchsia-500'
-    }
-    case 'Control': {
-      return // 'border-l-8 border-neutral-200'
-    }
-    default: {
-      return // 'border-l-8 border-r-8 border-neutral-200'
-    }
-  }
 })
 
 const handleStyles = computed(() => {
@@ -142,6 +185,6 @@ const bgColorInterpolator = piecewise(interpolate, [
 
 <style lang="postcss" scoped>
 :global(.vue-flow__node) {
-  @apply border-surface-300 rounded-md shadow-sm p-0 flex;
+  @apply p-0 !shadow-none !border-none;
 }
 </style>

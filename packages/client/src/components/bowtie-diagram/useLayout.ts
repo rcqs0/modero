@@ -29,6 +29,7 @@ export function useLayout() {
     const isHorizontal = direction === 'LR'
     dagreGraph.setGraph({
       rankdir: direction,
+      // ranker: 'longest-path',
       ranksep: RANK_SEP,
       nodesep: NODE_SEP,
       edgesep: EDGE_SEP,
@@ -52,7 +53,7 @@ export function useLayout() {
       dagreGraph.setEdge(edge.source, edge.target)
     }
 
-    dagre.layout(dagreGraph)
+    dagre.layout(dagreGraph, { disableOptimalOrderHeuristic: false })
     const dagreNodes = nodes.map((node) => graph.value.node(node.id))
 
     // if (isHorizontal) {
