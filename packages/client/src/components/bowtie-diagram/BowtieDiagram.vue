@@ -14,8 +14,11 @@
     <Panel
       v-if="selected"
       position="top-right"
-      class="p-3 shadow-md rounded-md bg-white flex flex-col"
+      class="p-6 w-96 shadow rounded-md bg-white flex flex-col gap-6"
     >
+      <div class="text-xl font-bold">
+        {{ selected.data.label ?? selected.data.event?.label }}
+      </div>
       <UncertaintyForm
         v-if="selected.data.__typename === 'Uncertainty'"
         :data="selected.data"
