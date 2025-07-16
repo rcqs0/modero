@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-0.5">
+  <div class="flex flex-col gap-1">
     <div v-if="label" class="font-semibold text-sm">{{ label }}</div>
     <div>
       <slot :bindings="bindings">

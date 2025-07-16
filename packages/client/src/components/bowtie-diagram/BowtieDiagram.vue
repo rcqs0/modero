@@ -2,8 +2,8 @@
   <Diagram
     :nodes="nodes"
     :edges="edges"
-    :nodes-draggable="true"
-    :apply-default="true"
+    :nodes-draggable="false"
+    :apply-default="false"
     class="bg-neutral-50"
     @nodes-initialized="layoutGraph"
   >
