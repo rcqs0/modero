@@ -213,7 +213,7 @@ function addControl(source: Cause | Effect) {
   })
   transact(props.data.controls, () => {
     props.data.controls.push(control)
-    source.controls.push(control)
+    source.controls.unshift(control)
   })
   selected.value = control.id
 }
