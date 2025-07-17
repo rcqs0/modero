@@ -1,10 +1,11 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import PrimeVue from 'primevue/config'
-import './style.css'
 import main from './main.vue'
 import router from './router'
+import PrimeVue from 'primevue/config'
+import Aura from '@primeuix/themes/aura'
 
+import './style.css'
 import 'remixicon/fonts/remixicon.css'
 
 const app = createApp(main)
@@ -12,8 +13,11 @@ const pinia = createPinia()
 
 app.use(router)
 app.use(pinia)
+
 app.use(PrimeVue, {
-  unstyled: true,
+  theme: {
+    preset: Aura,
+  },
 })
 
 app.mount('#app')

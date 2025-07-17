@@ -81,7 +81,7 @@ export default defineComponent({
   background: v-bind(currentColor);
 
   &::-webkit-slider-thumb {
-    @apply appearance-none;
+    appearance: var(--appearance-none);
   }
 
   &::-webkit-slider-thumb {

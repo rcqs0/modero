@@ -92,9 +92,9 @@
           :is-visible="true"
         >
           <Button
+            severity="contrast"
             rounded
             icon="ri-add-line"
-            severity="contrast"
             class="scale-75"
             @click="$emit('addCause', node.data)"
           />
@@ -105,9 +105,9 @@
           :is-visible="true"
         >
           <Button
+            severity="contrast"
             rounded
             icon="ri-add-line"
-            severity="contrast"
             class="scale-75"
             @click="$emit('addEffect', node.data)"
           />
@@ -120,9 +120,9 @@
           :is-visible="true"
         >
           <Button
+            severity="contrast"
             rounded
             icon="ri-add-line"
-            severity="contrast"
             class="scale-75"
             @click="$emit('addControl', node.data)"
           />
@@ -135,9 +135,9 @@
           :is-visible="true"
         >
           <Button
+            severity="contrast"
             rounded
             icon="ri-add-line"
-            severity="contrast"
             class="scale-75"
             @click="$emit('addControl', node.data)"
           />
@@ -185,6 +185,8 @@ const bgColorInterpolator = piecewise(interpolate, [
 
 <style lang="postcss" scoped>
 :global(.vue-flow__node) {
-  @apply p-0 !shadow-none !border-none;
+  padding: 0px;
+  border: none !important;
+  outline: none !important;
 }
 </style>

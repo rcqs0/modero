@@ -13,7 +13,9 @@
           :color="['#fb2c36', '#fd9a00', '#00c951']"
           class="flex-grow"
         />
-        <InputNumber v-model="data.effectiveness" class="w-16" fluid />
+        <div class="w-16">
+          <InputNumber v-model="data.effectiveness" fluid />
+        </div>
       </div>
     </Field>
   </form>

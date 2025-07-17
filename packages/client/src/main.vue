@@ -9,7 +9,7 @@
 
   font-size: 14px;
   line-height: normal;
-  @apply text-surface-700;
+  @apply text-neutral-700;
 }
 @supports (font-variation-settings: normal) {
   :root {

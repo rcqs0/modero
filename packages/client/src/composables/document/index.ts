@@ -1,9 +1,9 @@
-import { onBeforeUnmount, Ref, ref, watch } from 'vue'
+import { onBeforeUnmount, type Ref, ref, watch } from 'vue'
 import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket'
 import { Awareness } from 'y-protocols/awareness'
 import object from './object'
-import { Entities } from './utils'
+import { type Entities } from './utils'
 
 export { inspect, transact } from './utils'
 
