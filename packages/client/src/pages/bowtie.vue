@@ -1,6 +1,55 @@
 <template>
   <Layout>
-    <BowtieDiagram v-if="initialized" :data="state" />
+    <ResizableLayout v-if="initialized">
+      <Layout
+        column
+        size="96"
+        class="min-w-48 px-3 py-2 shadow-md z-10 text-[12px]"
+      >
+        <div class="font-semibold p-3 text-base">Uncertainties</div>
+        <div v-for="uncertainty in entities.Uncertainty" class="flex flex-col">
+          <div
+            class="px-3 py-2 flex items-center gap-2 rounded-md hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
+          >
+            <i class="ri-indeterminate-circle-line" />
+            <i class="ri-alert-fill text-cyan-500" />
+            <div>{{ uncertainty.label }}</div>
+          </div>
+          <div class="flex flex-col ml-[16px] border-l border-dashed">
+            <div
+              v-for="cause in Object.values(entities.Cause).filter(
+                (cause) => cause.uncertainty === uncertainty,
+              )"
+              class="flex flex-col ml-0.5"
+            >
+              <div
+                class="px-3 py-2 flex items-center gap-2 rounded-md hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
+              >
+                <i class="ri-indeterminate-circle-line" />
+                <i class="ri-git-merge-fill rotate-90 text-cyan-500" />
+                <div>{{ cause.event.label }}</div>
+              </div>
+              <div class="flex flex-col ml-3 ml-[16px] border-l border-dashed">
+                <div
+                  v-for="control in cause.controls"
+                  class="flex flex-col ml-0.5"
+                >
+                  <div
+                    class="px-3 py-2 flex items-center gap-2 rounded-md hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
+                  >
+                    <i class="ri-git-commit-fill" />
+                    <div>{{ control.label }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+      <Layout>
+        <BowtieDiagram :data="state" />
+      </Layout>
+    </ResizableLayout>
   </Layout>
 </template>
 
@@ -156,7 +205,7 @@ const effects = [
   }),
 ]
 
-const { state, initialized } = useDocument(
+const { state, entities, initialized } = useDocument(
   {
     uncertainties,
     events,

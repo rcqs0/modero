@@ -20,7 +20,7 @@
 
     <div
       v-if="type === 'Uncertainty'"
-      class="flex-grow relative h-[12px] flex-shrink-0 border-b-2 shadow-inner stroke-current shadow-current text-cyan-500 bg-cyan-200 border-current rounded-t-md"
+      class="flex-grow relative h-[12px] flex-shrink-0 border-b-2 shadow-inner stroke-current shadow-yellow-500 text-neutral-700 bg-yellow-300 border-current rounded-t-md"
     >
       <svg
         class="absolute top-0 left-0 h-full w-full rounded-t-md"
@@ -95,7 +95,7 @@
             severity="contrast"
             rounded
             icon="ri-add-line"
-            class="scale-75"
+            size="small"
             @click="$emit('addCause', node.data)"
           />
         </NodeToolbar>
@@ -108,7 +108,7 @@
             severity="contrast"
             rounded
             icon="ri-add-line"
-            class="scale-75"
+            size="small"
             @click="$emit('addEffect', node.data)"
           />
         </NodeToolbar>
@@ -123,7 +123,7 @@
             severity="contrast"
             rounded
             icon="ri-add-line"
-            class="scale-75"
+            size="small"
             @click="$emit('addControl', node.data)"
           />
         </NodeToolbar>
@@ -138,7 +138,7 @@
             severity="contrast"
             rounded
             icon="ri-add-line"
-            class="scale-75"
+            size="small"
             @click="$emit('addControl', node.data)"
           />
         </NodeToolbar>

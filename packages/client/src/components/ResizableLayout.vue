@@ -21,7 +21,7 @@
       >
         <div
           :class="{
-            'resizablelayout-divider-overlay': true,
+            'resizablelayout-divider-overlay z-10': true,
             'flex-shrink-0 flex-grow z-0': true,
             '-mx-1': !column,
             '-my-1': column,

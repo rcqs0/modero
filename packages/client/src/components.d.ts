@@ -56,6 +56,8 @@ declare module 'vue' {
     SelectButton: typeof import('primevue/selectbutton')['default']
     Slider: typeof import('./components/Slider.vue')['default']
     SplitButton: typeof import('primevue/splitbutton')['default']
+    Splitter: typeof import('primevue/splitter')['default']
+    SplitterPanel: typeof import('primevue/splitterpanel')['default']
     Tab: typeof import('primevue/tab')['default']
     TabList: typeof import('primevue/tablist')['default']
     TabPanel: typeof import('primevue/tabpanel')['default']
