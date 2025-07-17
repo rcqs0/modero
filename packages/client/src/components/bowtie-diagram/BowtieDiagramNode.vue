@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-full flex flex-col text-left rounded-md shadow-sm border border-surface-300"
+    class="w-full flex flex-col text-left rounded-md shadow-sm border border-neutral-300"
     :class="{ 'ring-4 ring-black border-black': selected }"
   >
     <Handle
@@ -72,15 +72,23 @@
         </svg>
       </div>
       <div
+        v-if="type === 'Cause'"
+        class="w-[8px] flex-shrink-0 border-r-2 shadow-inner shadow-current text-neutral-300 bg-neutral-100 border-current rounded-l-md"
+      />
+      <div
         v-if="type === 'Effect'"
-        class="w-[8px] flex-shrink-0 border-r-2 shadow-inner shadow-current text-fuchsia-500 bg-fuchsia-200 border-current rounded-l-md"
+        class="w-[8px] flex-shrink-0 border-r-2 shadow-inner shadow-current text-fuchsia-500 bg-fuchsia-300 border-current rounded-l-md"
       />
       <div class="flex-grow p-3">
         {{ label }}
       </div>
       <div
         v-if="type === 'Cause'"
-        class="w-[8px] flex-shrink-0 border-l-2 shadow-inner shadow-current text-cyan-500 bg-cyan-200 border-current rounded-r-md"
+        class="w-[8px] flex-shrink-0 border-l-2 shadow-inner shadow-current text-cyan-500 bg-cyan-300 border-current rounded-r-md"
+      />
+      <div
+        v-if="type === 'Effect'"
+        class="w-[8px] flex-shrink-0 border-l-2 shadow-inner shadow-current text-neutral-300 bg-neutral-100 border-current rounded-r-md"
       />
     </div>
 
