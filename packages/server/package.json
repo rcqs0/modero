@@ -13,23 +13,23 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/express": "^5.0.0",
-    "@types/ws": "^8.5.13",
-    "prisma": "^5.20.0",
-    "tsx": "^4.19.1",
-    "typescript": "^5.6.2"
+    "@types/express": "^5.0.3",
+    "@types/ws": "^8.18.1",
+    "prisma": "^6.12.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@prisma/client": "^5.20.0",
-    "@sinclair/typebox": "^0.33.14",
-    "@trpc/server": "^11.0.0-rc.553",
-    "express": "^4.21.1",
+    "@prisma/client": "^6.12.0",
+    "@sinclair/typebox": "^0.34.38",
+    "@trpc/server": "^11.4.3",
+    "express": "^5.1.0",
     "install": "^0.13.0",
-    "lib0": "^0.2.98",
-    "npm": "^11.2.0",
-    "ws": "^8.18.0",
+    "lib0": "^0.2.114",
+    "npm": "^11.4.2",
+    "ws": "^8.18.3",
     "y-protocols": "^1.0.6",
-    "yjs": "^13.6.20",
-    "zod": "^3.25.75"
+    "yjs": "^13.6.27",
+    "zod": "^4.0.5"
   }
 }
