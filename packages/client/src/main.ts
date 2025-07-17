@@ -13,7 +13,7 @@ const pinia = createPinia()
 app.use(router)
 app.use(pinia)
 app.use(PrimeVue, {
-  theme: 'none',
+  unstyled: true,
 })
 
 app.mount('#app')

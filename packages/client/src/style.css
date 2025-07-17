@@ -1,21 +1,19 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import './assets/primevue/tailwind.css';
-@import 'tailwindcss/utilities';
+@import 'tailwindcss';
+@import 'tailwindcss-primeui';
 
 /* Primary and Surface Palettes */
 :root {
-  --p-primary-50: #f0fdfa;
-  --p-primary-100: #ccfbf1;
-  --p-primary-200: #99f6e4;
-  --p-primary-300: #5eead4;
-  --p-primary-400: #2dd4bf;
-  --p-primary-500: #14b8a6;
-  --p-primary-600: #0d9488;
-  --p-primary-700: #0f766e;
-  --p-primary-800: #115e59;
-  --p-primary-900: #134e4a;
-  --p-primary-950: #042f2e;
+  --p-primary-50: #ecfdf5;
+  --p-primary-100: #d1fae5;
+  --p-primary-200: #a7f3d0;
+  --p-primary-300: #6ee7b7;
+  --p-primary-400: #34d399;
+  --p-primary-500: #10b981;
+  --p-primary-600: #059669;
+  --p-primary-700: #047857;
+  --p-primary-800: #065f46;
+  --p-primary-900: #064e3b;
+  --p-primary-950: #022c22;
   --p-surface-0: #ffffff;
   --p-surface-50: #fafafa;
   --p-surface-100: #f4f4f5;
@@ -31,7 +29,7 @@
   --p-content-border-radius: 6px;
 }
 
-/* Light Mode */
+/* Light */
 :root {
   --p-primary-color: var(--p-primary-500);
   --p-primary-contrast-color: var(--p-surface-0);
@@ -50,13 +48,13 @@
   --p-text-hover-muted-color: var(--p-surface-600);
 }
 
-/* 
+/*
  * Dark Mode
- * Defaults to system, change the selector to match the darkMode in tailwind.config.
- * For example; 
- * darkMode: ['selector', '[class*="app-dark"]'] 
- * should be;
- * :root[class="app-dark"] {
+ * Defaults to system, change the dark variant selector to match the CSS variable configuration.
+ * For example;
+ * @custom-variant dark (&:where(.app-dark, .app-dark *));
+ * should match to;
+ * :root[class="app-dark"]
 */
 @media (prefers-color-scheme: dark) {
   :root {
