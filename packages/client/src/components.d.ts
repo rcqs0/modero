@@ -46,6 +46,7 @@ declare module 'vue' {
     Layout: typeof import('./components/Layout.vue')['default']
     Menubar: typeof import('primevue/menubar')['default']
     MeterGroup: typeof import('primevue/metergroup')['default']
+    ModelEditorMenuBar: typeof import('./components/model-editor/ModelEditorMenuBar.vue')['default']
     OverlayBadge: typeof import('primevue/overlaybadge')['default']
     Panel: typeof import('primevue/panel')['default']
     PersonAvatar: typeof import('./components/PersonAvatar.vue')['default']

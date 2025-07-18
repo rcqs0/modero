@@ -1,32 +1,6 @@
 <template>
   <Layout column>
-    <Menubar :model="menu" class="z-20 shadow-sm">
-      <template #start>
-        <div
-          class="ml-[9px] flex-grow relative h-6 w-6 flex-shrink-0 border-b-2 shadow-inner stroke-current shadow-current text-cyan-700 bg-cyan-300 border-current rounded-md"
-        >
-          <svg
-            class="absolute top-0 left-0 h-full w-full rounded-md"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <pattern
-              id="diagonalHatch129837"
-              width="8"
-              height="10"
-              patternTransform="rotate(-45 0 0)"
-              patternUnits="userSpaceOnUse"
-            >
-              <line x1="0" y1="0" x2="0" y2="10" style="stroke-width: 8" />
-            </pattern>
-            <rect fill="url(#diagonalHatch129837)" width="100%" height="100%" />
-          </svg>
-        </div>
-      </template>
-      <template #end>
-        <PersonAvatar name="Roderick" />
-      </template>
-    </Menubar>
-
+    <ModelEditorMenuBar />
     <Layout v-if="initialized">
       <Layout column size="96" class="shadow-md z-10 px-3 py-2 text-[12px]">
         <!-- <Tabs value="0" class="px-0.5">
@@ -38,13 +12,18 @@
           </TabList>
         </Tabs> -->
 
-        <div class="font-semibold p-3 text-base flex items-center gap-2">
+        <div class="font-semibold p-3 text-base flex items-center gap-4">
           <!-- <i class="ri-git-branch-line rotate-90 text-cyan-500" /> -->
-          <div>Uncertainties</div>
+          <div class="cursor-pointer"><i class="ri-stack-line" /> Elements</div>
+          <div
+            class="text-neutral-400 font-normal cursor-pointer hover:text-neutral-700 transition-colors"
+          >
+            <i class="ri-formula" /> Metrics
+          </div>
         </div>
         <div v-for="uncertainty in entities.Uncertainty" class="flex flex-col">
           <div
-            class="px-3 py-2 flex items-center gap-2 rounded-md hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
+            class="px-3 py-2 flex items-center gap-2 rounded hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
           >
             <i class="ri-indeterminate-circle-line" />
             <i class="ri-alert-fill text-cyan-500" />
@@ -58,7 +37,7 @@
               class="flex flex-col ml-0.5"
             >
               <div
-                class="px-3 py-2 flex items-center gap-2 rounded-md hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
+                class="px-3 py-2 flex items-center gap-2 rounded hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
               >
                 <i class="ri-indeterminate-circle-line" />
                 <i class="ri-git-merge-fill rotate-90 text-cyan-500" />
@@ -70,7 +49,7 @@
                   class="flex flex-col ml-0.5"
                 >
                   <div
-                    class="px-3 py-2 flex items-center gap-2 rounded-md hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
+                    class="px-3 py-2 flex items-center gap-2 rounded hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
                   >
                     <i class="ri-git-commit-fill" />
                     <div class="truncate">{{ control.label }}</div>
@@ -100,7 +79,6 @@ import {
   effectSchema,
 } from '@/schemas'
 import useDocument from '@/composables/document'
-import { ref } from 'vue'
 
 const uncertainties = [
   uncertaintySchema.parse({
@@ -253,29 +231,4 @@ const { state, entities, initialized } = useDocument(
   },
   { channel: 'main' },
 )
-
-const menu = [
-  {
-    label: 'File',
-    items: [
-      {
-        label: 'New',
-        icon: 'ri-add-line',
-      },
-      {
-        label: 'Open',
-        icon: 'ri-folder-open-line',
-      },
-      { separator: true },
-      {
-        label: 'Save',
-        icon: 'ri-save-2-line',
-      },
-      {
-        label: 'Save as...',
-        icon: 'ri-save-2-line',
-      },
-    ],
-  },
-]
 </script>

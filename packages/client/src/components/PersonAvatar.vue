@@ -1,7 +1,7 @@
 <template>
   <Avatar
     shape="circle"
-    class="font-medium"
+    class="font-medium ring-1 ring-white"
     :style="{ backgroundColor, color }"
   >
     {{ initials }}
@@ -16,8 +16,8 @@ function toHSL(name: string) {
 
   const opts = {
     hue: [0, 360],
-    sat: [75, 100],
-    lit: [40, 60],
+    sat: [70, 71],
+    lit: [49, 50],
   }
 
   function range(hash: number, min: number, max: number) {
