@@ -7,15 +7,6 @@
     class="bg-neutral-50"
     @nodes-initialized="layoutGraph"
   >
-    <!-- <template #node-default="node">
-      <BowtieDiagramNode
-        :node="node"
-        :selected="selected === node.id"
-        @add-effect="addEffect"
-        @add-cause="addCause"
-        @add-control="addControl"
-      />
-    </template> -->
     <template #node-Uncertainty="node">
       <UncertaintyDiagramNode
         :node="node"

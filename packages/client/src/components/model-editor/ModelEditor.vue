@@ -1,71 +1,10 @@
 <template>
   <Layout column>
     <ModelEditorMenuBar />
-    <Layout v-if="initialized">
-      <Layout column size="96" class="shadow-md z-10 px-3 py-2 text-[12px]">
-        <!-- <Tabs value="0" class="px-0.5">
-          <TabList>
-            <Tab value="0" as="div"><i class="ri-shapes-fill" /></Tab>
-            <Tab value="1" as="div"><i class="ri-stack-fill" /></Tab>
-            <Tab value="2" as="div"><i class="ri-archive-stack-fill" /></Tab>
-            <Tab value="3" as="div"><i class="ri-sound-module-fill" /></Tab>
-          </TabList>
-        </Tabs> -->
-
-        <div class="font-semibold p-3 text-base flex items-center gap-4">
-          <!-- <i class="ri-git-branch-line rotate-90 text-cyan-500" /> -->
-          <div class="cursor-pointer"><i class="ri-stack-line" /> Model</div>
-          <div
-            class="text-neutral-400 font-normal cursor-pointer hover:text-neutral-700 transition-colors"
-          >
-            <i class="ri-formula" /> Metrics
-          </div>
-        </div>
-        <div v-for="uncertainty in entities.Uncertainty" class="flex flex-col">
-          <div
-            class="px-3 py-2 flex items-center gap-2 rounded hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
-          >
-            <i class="ri-indeterminate-circle-line" />
-            <i class="ri-alert-fill text-cyan-500" />
-            <div class="truncate">{{ uncertainty.label }}</div>
-          </div>
-          <div class="flex flex-col ml-[16px] border-l border-dashed">
-            <div
-              v-for="cause in Object.values(entities.Cause).filter(
-                (cause) => cause.uncertainty === uncertainty,
-              )"
-              class="flex flex-col ml-0.5"
-            >
-              <div
-                class="px-3 py-2 flex items-center gap-2 rounded hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
-              >
-                <i class="ri-indeterminate-circle-line" />
-                <i class="ri-git-merge-fill rotate-90 text-cyan-500" />
-                <div class="truncate">{{ cause.event.label }}</div>
-              </div>
-              <div class="flex flex-col ml-[16px] border-l border-dashed">
-                <div
-                  v-for="control in cause.controls"
-                  class="flex flex-col ml-0.5"
-                >
-                  <div
-                    class="px-3 py-2 flex items-center gap-2 rounded hover:bg-neutral-100 hover:shadow-inner hover:shadow-neutral-200/25 transition-colors cursor-pointer"
-                  >
-                    <i class="ri-git-commit-fill" />
-                    <div class="truncate">{{ control.label }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Layout>
-      <Layout>
-        <BowtieDiagram
-          :data="{ ...state, uncertainties: [state.uncertainties[0]] }"
-        />
-      </Layout>
-    </Layout>
+    <BowtieDiagram
+      v-if="initialized"
+      :data="{ ...state, uncertainties: [state.uncertainties[0]] }"
+    />
   </Layout>
 </template>
 
@@ -221,7 +160,7 @@ const effects = [
   }),
 ]
 
-const { state, entities, initialized } = useDocument(
+const { state, initialized } = useDocument(
   {
     state: {
       uncertainties,

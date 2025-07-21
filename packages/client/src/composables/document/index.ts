@@ -10,7 +10,10 @@ export { inspect, transact } from './utils'
 export default function useDocument<
   T extends Record<string, any[] | Record<any, any>>,
   C extends Record<string, any>,
->(init: T, options?: { channel?: string; session?: Ref<C> }) {
+>(
+  init: { state: T; entities: Entities },
+  options?: { channel?: string; session?: Ref<C> },
+) {
   const doc = new Y.Doc()
   const stateMap = doc.getMap('state')
   const entitiesMap = doc.getMap('entities')
@@ -28,7 +31,8 @@ export default function useDocument<
 
   function initialize() {
     doc.transact(() => {
-      Object.assign(state, init)
+      Object.assign(entities, init.entities)
+      Object.assign(state, init.state)
     })
 
     undoManager.clear()
