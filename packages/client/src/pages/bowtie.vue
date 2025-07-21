@@ -1,6 +1,6 @@
 <template>
   <Layout column>
-    <ModelEditorMenuBar />
+    <ModelMenuBar />
     <Layout v-if="initialized">
       <Layout column size="96" class="shadow-md z-10 px-3 py-2 text-[12px]">
         <!-- <Tabs value="0" class="px-0.5">
@@ -14,7 +14,7 @@
 
         <div class="font-semibold p-3 text-base flex items-center gap-4">
           <!-- <i class="ri-git-branch-line rotate-90 text-cyan-500" /> -->
-          <div class="cursor-pointer"><i class="ri-stack-line" /> Elements</div>
+          <div class="cursor-pointer"><i class="ri-stack-line" /> Model</div>
           <div
             class="text-neutral-400 font-normal cursor-pointer hover:text-neutral-700 transition-colors"
           >

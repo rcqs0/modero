@@ -7,7 +7,7 @@
     class="bg-neutral-50"
     @nodes-initialized="layoutGraph"
   >
-    <template #node-default="node">
+    <!-- <template #node-default="node">
       <BowtieDiagramNode
         :node="node"
         :selected="selected === node.id"
@@ -15,6 +15,35 @@
         @add-cause="addCause"
         @add-control="addControl"
       />
+    </template> -->
+    <template #node-Uncertainty="node">
+      <UncertaintyDiagramNode
+        :node="node"
+        :selected="selected === node.id"
+        @add-cause="addCause"
+        @add-effect="addEffect"
+      />
+    </template>
+    <template #node-Cause="node">
+      <CauseDiagramNode
+        :node="node"
+        :selected="selected === node.id"
+        @add-control="addControl"
+      >
+        {{ node.data.event.label }}
+      </CauseDiagramNode>
+    </template>
+    <template #node-Effect="node">
+      <EffectDiagramNode
+        :node="node"
+        :selected="selected === node.id"
+        @add-control="addControl"
+      >
+        {{ node.data.event.label }}
+      </EffectDiagramNode>
+    </template>
+    <template #node-Control="node">
+      <ControlDiagramNode :node="node" :selected="selected === node.id" />
     </template>
 
     <Panel
@@ -85,7 +114,8 @@ function addNode(data: Instance) {
     id: data.id,
     data,
     position: { x: 0, y: 0 },
-    // width: 150,
+    type: data.__typename,
+    width: 150,
   })
 }
 
